@@ -94,8 +94,8 @@ $ unzip -l ADNI_data_Do_NOT_redistribute.zip
 
 | 문서 | 카테고리 | 내용 |
 |---|---|---|
-| [quick_start.md](quick_start.md) | Quick_Start (7.4 MB) | 데이터 사전 `DATADIC` 34,930행 — 336개 테이블 전 변수 정의, 조회 방법 |
-| [study_info.md](study_info.md) | Study_Info (169.9 MB) | 프로토콜 PDF, `ADNIMERGE2` R 패키지 217개 테이블, `ADSL` 코호트 요약, 조인 함정 |
+| [quick_start.md](quick_start.md) | Quick_Start (7.4 MB) | 데이터 사전 `DATADIC` 34,930행 — 컬럼 구조, TYPE/STATUS/UNITS 값, 도메인별 규모, 조인 키 보유 현황 |
+| [study_info.md](study_info.md) | Study_Info (169.9 MB) | 프로토콜 PDF, 운영성 CSV 3개, `ADNIMERGE2` 217개 테이블, `ADSL` 코호트 상세, 함정 3가지 |
 
 나머지 카테고리(Imaging, Genetic, Assessments, ADSP_PHC 등)는 아직 풀지 않았습니다.
 확인하는 대로 같은 형식으로 문서를 추가합니다.
