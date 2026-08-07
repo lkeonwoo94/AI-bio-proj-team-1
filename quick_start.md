@@ -38,38 +38,3 @@ drwxr-xr-x 4 kali kali    4096 Aug  7 17:20 ..
 
 `PHASE` 태그 분포: 단일 단계(ADNI1/GO/2/3/4 각 1.8k–2.8k), 다단계 공유 8,823, 미태깅 14,490.
 미태깅이 많은 이유는 외부 연구실 제공 오믹스/영상 테이블이 특정 프로토콜에 묶이지 않기 때문입니다.
-
----
-
-## 조회 방법
-
-전체 압축을 풀지 않고 메모리로 바로 읽습니다.
-
-```python
-import zipfile, io, pandas as pd
-
-with zipfile.ZipFile("data/ADNI_data_Do_NOT_redistribute.zip") as outer:
-    with outer.open("Quick_Start.zip") as f:
-        inner = zipfile.ZipFile(io.BytesIO(f.read()))
-
-with inner.open("DATADIC_21Jan2026.csv") as f:
-    datadic = pd.read_csv(f, low_memory=False)
-
-print(datadic.shape)   # (34930, 13)
-```
-
-```python
-# 특정 테이블의 변수 목록
-datadic[datadic.TBLNAME == "MOCA"][["FLDNAME", "TEXT", "CODE"]]
-
-# 컬럼명 역검색 — "이 컬럼 어느 테이블 거지?"
-datadic[datadic.FLDNAME == "CDRSB"][["TBLNAME", "TEXT", "UNITS"]].drop_duplicates()
-
-# 설명 텍스트 검색 — "해마 부피 변수가 어디 있지?"
-datadic[datadic.TEXT.str.contains("hippocamp", case=False, na=False)][
-    ["TBLNAME", "FLDNAME", "TEXT"]
-]
-
-# 코딩값 확인 — "1이 남자야 여자야?"
-datadic[(datadic.TBLNAME == "PTDEMOG") & (datadic.FLDNAME == "PTGENDER")].CODE.iloc[0]
-```
