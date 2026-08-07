@@ -102,45 +102,6 @@ $ unzip -l ADNI_data_Do_NOT_redistribute.zip
 
 ---
 
-## 로컬 세팅
-
-### 1. 데이터 배치
-
-각자 LONI에서 내려받은 뒤 아래처럼 둡니다. `data/` 는 `.gitignore` 처리돼 있습니다.
-
-```
-AI-bio-proj-team-1/
-├── data/                                    # git 추적 안 함
-│   └── ADNI_data_Do_NOT_redistribute.zip
-├── notebooks/
-├── src/
-├── results/
-├── .gitignore
-└── README.md
-```
-
-### 2. 카테고리 ZIP 열기 (전체 해제 없이)
-
-```python
-import zipfile, io, pandas as pd
-
-outer = zipfile.ZipFile("data/ADNI_data_Do_NOT_redistribute.zip")
-
-with outer.open("Quick_Start.zip") as f:
-    inner = zipfile.ZipFile(io.BytesIO(f.read()))
-
-with inner.open("DATADIC_21Jan2026.csv") as f:
-    datadic = pd.read_csv(f, low_memory=False)
-
-print(datadic.shape)   # (34930, 13)
-```
-
-### 3. ADNIMERGE2 불러오기
-
-[study_info.md](study_info.md#불러오는-방법) 참고.
-
----
-
 ## 참고 링크
 
 - ADNI 공식: <https://adni.loni.usc.edu/>
