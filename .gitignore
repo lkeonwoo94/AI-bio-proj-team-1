@@ -1,0 +1,127 @@
+# =============================================================
+#  ADNI 데이터 보호 — 최우선 규칙
+#  이 저장소에는 ADNI 원본 데이터, 참가자 수준 데이터,
+#  그로부터 파생된 개인 식별 가능 산출물을 절대 커밋하지 않는다.
+#  (ADNI Data Use Agreement: 재배포 금지)
+# =============================================================
+
+# --- 압축 아카이브 (원본 번들) ---
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.bz2
+*.7z
+*.rar
+
+# --- 데이터 디렉터리 ---
+adni/
+data/
+raw/
+raw_data/
+interim/
+processed/
+external/
+downloads/
+
+# --- 표 형식 데이터 파일 ---
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.sav
+*.dta
+*.parquet
+*.feather
+*.arrow
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+
+# --- R 데이터 객체 ---
+*.rda
+*.RData
+*.rds
+*.Rds
+
+# --- 의료 영상 ---
+*.nii
+*.nii.gz
+*.dcm
+*.mgz
+*.mgh
+*.img
+*.hdr
+
+# --- 문서 (ADNI 매뉴얼 / CRF 등 배포 자료) ---
+*.pdf
+*.doc
+*.docx
+
+# --- 예외: 추적해야 하는 파일 ---
+# 위 확장자 규칙에도 불구하고 저장소에 포함할 파일은 여기에 등록한다.
+!requirements.txt
+!environment.yml
+!docs/**/*.md
+# 예) 완전 익명화된 집계 결과만 선별 추가
+# !results/tables/summary_counts.csv
+
+# =============================================================
+#  개발 환경
+# =============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- Jupyter ---
+# 노트북 출력에 데이터가 남을 수 있으니 커밋 전 반드시 출력 지우기
+*-checkpoint.ipynb
+
+# --- R ---
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# --- 자격증명 / 비밀값 ---
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets.yaml
+.netrc
+
+# --- OS / 편집기 ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- 로그 / 임시 파일 ---
+*.log
+logs/
+tmp/
+temp/
+scratch/
