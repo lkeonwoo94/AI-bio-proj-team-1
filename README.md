@@ -33,7 +33,6 @@
 | 파일명 | `ADNI_data_Do_NOT_redistribute.zip` |
 | 크기 | 1,136,659,190 바이트 (약 1.14 GB) |
 | 형식 | ZIP 압축 파일 |
-| 업로드 | 2026-08-07 07:48 UTC (사용자 업로드) |
 | 체크섬 | `2a3579bb…f39df61f` (SHA-256) |
 
 
@@ -41,38 +40,21 @@
 
 최상위에는 카테고리별 ZIP 12개가 중첩되어 있고, 그 안에 총 **283개 파일(CSV 185개, PDF 81개)** 이 들어 있습니다.
 
-| 카테고리 | 압축 해제 크기 | 파일 수 | CSV | PDF |
-|---|---:|---:|---:|---:|
-| Quick_Start | 7.4 MB | 2 | 1 | 1 |
-| Study_Info | 169.9 MB | 21 | 3 | 14 |
-| Test_Data_for_Challenges | 57.6 MB | 4 | 0 | 0 |
-| Assessments | 91.0 MB | 52 | 45 | 7 |
-| Subject_Characteristics | 6.0 MB | 9 | 8 | 1 |
-| Imaging | 541.1 MB | 125 | 78 | 42 |
-| ADSP_PHC | 451.2 MB | 29 | 21 | 7 |
-| Genetic | 160.5 MB | 12 | 4 | 6 |
-| Remotely_Collected_Data | 61.9 MB | 9 | 7 | 2 |
-| Medical_History | 46.4 MB | 16 | 16 | 0 |
-| Curated_Data___Docs | 2.2 MB | 2 | 1 | 0 |
-| Neuropathology_Results | 0.3 MB | 2 | 1 | 1 |
+| 카테고리 | 내용 | 압축 해제 크기 | 파일 수 | CSV | PDF |
+|---|---|---:|---:|---:|---:|
+| [Quick_Start](docs/quick_start.md) | 전체 변수 데이터 사전 + 퀵스타트 가이드. **[필드 수가 가장 많은 테이블 기재](docs/quick_start.md#도메인별-규모)** | 7.4 MB | 2 | 1 | 1 |
+| [Study_Info](docs/study_info.md) | 단계별 Procedures Manual/CRF + `ADNIMERGE2` R 패키지 | 169.9 MB | 21 | 3 | 14 |
+| [Test_Data_for_Challenges](docs/test_data_for_challenges.md) | 챌린지용 별도 테스트 세트 | 57.6 MB | 4 | 0 | 0 |
+| [Subject_Characteristics](docs/subject_characteristics.md) | 인구학·가족력·거주지 특성 | 6.0 MB | 9 | 8 | 1 |
+| [Assessments](docs/assessments.md) | 인지·기능 평가 척도 (MoCA, ADAS, FAQ, ECog 등) | 91.0 MB | 52 | 45 | 7 |
+| [Remotely_Collected_Data](docs/remotely_collected_data.md) | ADNI4 원격(RMT) 트랙 스크리닝·인구학·ECog·Storyteller | 61.9 MB | 9 | 7 | 2 |
+| [ADSP_PHC](docs/adsp_phc.md) | ADSP 조화 인지 점수(harmonized composite) | 451.2 MB | 29 | 21 | 7 |
+| [Medical_History](docs/medical_history.md) | 병력, 병용약물, 이상반응 | 46.4 MB | 16 | 16 | 0 |
+| [Neuropathology_Results](docs/neuropathology_results.md) | 부검 신경병리 소견 | 0.3 MB | 2 | 1 | 1 |
+| [Curated_Data___Docs](docs/curated_data_docs.md) | ADNI-DIAN 비교 연구용 큐레이션 서브셋 | 2.2 MB | 2 | 1 | 0 |
+| [Imaging](docs/imaging.md) | MRI 부피·위축도, amyloid PET SUVR 등 영상 파생 지표 | 541.1 MB | 125 | 78 | 42 |
+| [Genetic](docs/genetic.md) | TOMM40, 다유전자 위험 점수(PHS), 텔로미어, tau-PET GWAS | 160.5 MB | 12 | 4 | 6 |
 
-
-카테고리별 내용:
-
-- **[Quick_Start](docs/quick_start.md)** — `DATADIC_21Jan2026.csv`(전체 변수 데이터 사전)와 퀵스타트 가이드. **데이터 구조 파악의 출발점**, **[필드 수가 가장 많은 테이블 기재](docs/quick_start.md#도메인별-규모)**
-- **[Study_Info](docs/study_info.md)** — 단계별 Procedures Manual/CRF PDF와 `ADNIMERGE2.tar.gz` R 패키지. **실제 분석은 여기서 시작.**
-
-- **[Test_Data_for_Challenges_…](docs/test_data_for_challenges.md)** — 챌린지용 별도 테스트 세트(추가 중첩 압축).
-- **[Assessments](docs/assessments.md)** — MoCA, ADAS, FAQ, ECog(본인/보호자) 등 인지·기능 평가 척도.
-- **[ADSP_PHC](docs/adsp_phc.md)** — Alzheimer's Disease Sequencing Project 조화 인지 점수(harmonized composite).
-- **[Subject_Characteristics](docs/subject_characteristics.md)** — 인구학 정보(`PTDEMOG`), 가족력(`FHQ`, `FAMHXPAR`), 거주지 특성(`ADI`, `RURALITY`).
-- **[Medical_History](docs/medical_history.md)** — 병력, 병용약물, 이상반응.
-- **[Neuropathology_Results](docs/neuropathology_results.md)** — 부검 신경병리 소견 `NEUROPATH_22Jan2026.csv`.
-- **[Curated_Data___Docs](docs/curated_data_docs.md)** — ADNI-DIAN 비교 연구용 큐레이션 서브셋.
-- **[Remotely_Collected_Data](docs/remotely_collected_data.md)** — ADNI4 원격(RMT) 트랙 스크리닝·인구학·ECog·Storyteller 검사.
-
-- **[Imaging](docs/imaging.md)** — MRI 부피(`UCSDVOL`, `UCSFSNTVOL`, `BSI`), 위축도(`UCSFATRPHY`), amyloid PET SUVR(`PIBPETSUVR`) 등 영상 파생 지표.
-- **[Genetic](docs/genetic.md)** — APOE 인접 `TOMM40`, Desikan lab 다유전자 위험 점수(PHS), 텔로미어 비율, tau-PET GWAS 요약통계.
 
 
 
