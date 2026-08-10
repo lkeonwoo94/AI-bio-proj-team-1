@@ -42,18 +42,18 @@
 
 | 카테고리 | 내용 | 압축 해제 크기 | 파일 수 | CSV | PDF |
 |---|---|---:|---:|---:|---:|
-| [Quick_Start](docs/quick_start.md) | 전체 변수 데이터 사전 + 퀵스타트 가이드. **[필드 수가 가장 많은 테이블 기재](docs/quick_start.md#도메인별-규모)** | 7.4 MB | 2 | 1 | 1 |
-| [Study_Info](docs/study_info.md) | 단계별 Procedures Manual/CRF + `ADNIMERGE2` R 패키지 | 169.9 MB | 21 | 3 | 14 |
-| [Test_Data_for_Challenges](docs/test_data_for_challenges.md) | 챌린지용 별도 테스트 세트 | 57.6 MB | 4 | 0 | 0 |
-| [Subject_Characteristics](docs/subject_characteristics.md) | 인구학·가족력·거주지 특성 | 6.0 MB | 9 | 8 | 1 |
-| [Assessments](docs/assessments.md) | 인지·기능 평가 척도 (MoCA, ADAS, FAQ, ECog 등) | 91.0 MB | 52 | 45 | 7 |
-| [Remotely_Collected_Data](docs/remotely_collected_data.md) | ADNI4 원격(RMT) 트랙 스크리닝·인구학·ECog·Storyteller | 61.9 MB | 9 | 7 | 2 |
-| [ADSP_PHC](docs/adsp_phc.md) | ADSP 조화 인지 점수(harmonized composite) | 451.2 MB | 29 | 21 | 7 |
-| [Medical_History](docs/medical_history.md) | 병력, 병용약물, 이상반응 | 46.4 MB | 16 | 16 | 0 |
-| [Neuropathology_Results](docs/neuropathology_results.md) | 부검 신경병리 소견 | 0.3 MB | 2 | 1 | 1 |
-| [Curated_Data___Docs](docs/curated_data_docs.md) | ADNI-DIAN 비교 연구용 큐레이션 서브셋 | 2.2 MB | 2 | 1 | 0 |
-| [Imaging](docs/imaging.md) | MRI 부피·위축도, amyloid PET SUVR 등 영상 파생 지표 | 541.1 MB | 125 | 78 | 42 |
-| [Genetic](docs/genetic.md) | TOMM40, 다유전자 위험 점수(PHS), 텔로미어, tau-PET GWAS | 160.5 MB | 12 | 4 | 6 |
+| [Quick_Start](docs/adni/quick_start.md) | 전체 변수 데이터 사전 + 퀵스타트 가이드. **[필드 수가 가장 많은 테이블 기재](docs/adni/quick_start.md#도메인별-규모)** | 7.4 MB | 2 | 1 | 1 |
+| [Study_Info](docs/adni/study_info.md) | 단계별 Procedures Manual/CRF + `ADNIMERGE2` R 패키지 | 169.9 MB | 21 | 3 | 14 |
+| [Test_Data_for_Challenges](docs/adni/test_data_for_challenges.md) | 챌린지용 별도 테스트 세트 | 57.6 MB | 4 | 0 | 0 |
+| [Subject_Characteristics](docs/adni/subject_characteristics.md) | 인구학·가족력·거주지 특성 | 6.0 MB | 9 | 8 | 1 |
+| [Assessments](docs/adni/assessments.md) | 인지·기능 평가 척도 (MoCA, ADAS, FAQ, ECog 등) | 91.0 MB | 52 | 45 | 7 |
+| [Remotely_Collected_Data](docs/adni/remotely_collected_data.md) | ADNI4 원격(RMT) 트랙 스크리닝·인구학·ECog·Storyteller | 61.9 MB | 9 | 7 | 2 |
+| [ADSP_PHC](docs/adni/adsp_phc.md) | ADSP 조화 인지 점수(harmonized composite) | 451.2 MB | 29 | 21 | 7 |
+| [Medical_History](docs/adni/medical_history.md) | 병력, 병용약물, 이상반응 | 46.4 MB | 16 | 16 | 0 |
+| [Neuropathology_Results](docs/adni/neuropathology_results.md) | 부검 신경병리 소견 | 0.3 MB | 2 | 1 | 1 |
+| [Curated_Data___Docs](docs/adni/curated_data_docs.md) | ADNI-DIAN 비교 연구용 큐레이션 서브셋 | 2.2 MB | 2 | 1 | 0 |
+| [Imaging](docs/adni/imaging.md) | MRI 부피·위축도, amyloid PET SUVR 등 영상 파생 지표 | 541.1 MB | 125 | 78 | 42 |
+| [Genetic](docs/adni/genetic.md) | TOMM40, 다유전자 위험 점수(PHS), 텔로미어, tau-PET GWAS | 160.5 MB | 12 | 4 | 6 |
 
 
 
@@ -89,7 +89,8 @@ AI-bio-proj-team-1/
 ├── models/            # 학습된 모델 가중치·체크포인트 (대용량은 git 추적 안 함)
 ├── configs/           # 실험 설정 (yaml 등)
 ├── tests/             # 테스트 코드
-└── docs/              # 프로젝트 문서, 데이터 사전 등
+└── docs/              # 프로젝트 문서
+    ├── adni/             # ADNI 데이터 사전·가이드
     ├── meetings/         # 회의록 (YYYY-MM-DD.md, TEMPLATE.md 참고)
     └── research/         # 각자 조사·탐색 내용 (주제별 파일, TEMPLATE.md 참고)
 ```
