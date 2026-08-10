@@ -38,6 +38,9 @@ ADNI 단계별(ADNI1 → ADNIGO → ADNI2 → ADNI3 → ADNI4) Procedures Manual
 `ADSL`은 참가자 키가 `USUBJID`(`ADNI-001-00221` 형식)로, 원본 CSV 계열의 `RID`/`PTID`와 다릅니다.
 두 계통을 조인하려면 접두사를 떼어 변환해야 하며, 패키지의 `convert_usubjid_to_rid()` 함수가 이 작업을 합니다.
 
+### ADNIMERGE2 (ATRI Biostatistics 배포 v0.1.1)를 풀면 나오는 data/ADSL.rda 개요
+ADSL 코호트 [adsl_cohort.md](adsl_cohort.md) 참고.
+
 ## 운영성 CSV 3개
 
 PDF·R 패키지 위주인 이 카테고리에서 실제 원본 CSV는 3개뿐이며, 분석 대상이라기보다 **분석 전 확인용** 자료입니다.
@@ -51,4 +54,4 @@ PDF·R 패키지 위주인 이 카테고리에서 실제 원본 CSV는 3개뿐�
 ## 참고
 
 - `-4`는 ADNI 전반에서 결측을 뜻하는 sentinel 값입니다. 수치로 그대로 읽지 말고 로딩 직후 `NA`로 치환해야 합니다.
-- `ADSL`의 `DX`, `EDUC`, `CDRSB`, `MMSCORE` 등에서 큰 폭의 결측이 보이면, 먼저 `ENRLFL`(등록 여부)로 필터링했는지 확인하세요. `ADSL`은 스크리닝을 받은 전체 인원을 담고 있어 미등록자(등록 전 탈락)는 기저 평가 자체가 없습니다.
+
