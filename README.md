@@ -90,7 +90,8 @@ AI-bio-proj-team-1/
 ├── configs/           # 실험 설정 (yaml 등)
 ├── tests/             # 테스트 코드
 └── docs/              # 프로젝트 문서, 데이터 사전 등
-    └── meetings/         # 회의록 (YYYY-MM-DD.md, TEMPLATE.md 참고)
+    ├── meetings/         # 회의록 (YYYY-MM-DD.md, TEMPLATE.md 참고)
+    └── research/         # 각자 조사·탐색 내용 (주제별 파일, TEMPLATE.md 참고)
 ```
 
 - `data/`, `raw/`, `interim/`, `processed/` 는 `.gitignore`에서 통째로 제외됩니다. **원본·파생 데이터는 절대 커밋하지 않습니다.**
