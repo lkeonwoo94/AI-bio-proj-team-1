@@ -66,3 +66,33 @@
 - 데이터 다운로드(LONI IDA): <https://ida.loni.usc.edu/>
 - ADNIMERGE2 문서: <https://atri-biostats.github.io/ADNIMERGE2>
 
+---
+
+## 폴더 구조
+
+```
+AI-bio-proj-team-1/
+├── data/
+│   ├── raw/          # 원본 ADNI 데이터 (수정 금지, git 추적 안 함)
+│   ├── interim/       # 전처리 중간 산출물 (git 추적 안 함)
+│   └── processed/     # 분석·모델 입력용 최종 데이터 (git 추적 안 함)
+├── notebooks/         # 탐색적 분석용 Jupyter 노트북 (커밋 전 출력 지우기)
+├── src/               # 재사용 코드 모듈
+│   ├── preprocessing/    # 데이터 로딩·전처리
+│   ├── features/        # 피처 엔지니어링
+│   ├── models/           # 모델 정의·학습
+│   └── viz/              # 시각화 함수
+├── scripts/           # 파이프라인 실행용 CLI 스크립트
+├── results/
+│   ├── figures/        # 그림 (개인 식별 불가한 것만)
+│   └── tables/          # 집계·요약 표
+├── models/            # 학습된 모델 가중치·체크포인트 (대용량은 git 추적 안 함)
+├── configs/           # 실험 설정 (yaml 등)
+├── tests/             # 테스트 코드
+└── docs/              # 프로젝트 문서, 데이터 사전 등
+```
+
+- `data/`, `raw/`, `interim/`, `processed/` 는 `.gitignore`에서 통째로 제외됩니다. **원본·파생 데이터는 절대 커밋하지 않습니다.**
+- 노트북에서 검증된 로직은 `src/`로 옮겨 재사용합니다.
+- 빈 폴더는 `.gitkeep`으로 구조만 git에 유지합니다.
+
