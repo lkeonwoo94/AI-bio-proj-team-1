@@ -152,13 +152,6 @@ DepMap은 ADNI와 달리 연구 목적 재배포 제한이 느슨합니다. 대�
 | common essential (타깃에서 제외 대상) | 1,827 |
 | **선택적 의존 유전자 (제외 후 std > 0.25)** | **681** ← 실질 학습 대상 |
 
-## DepMap 알아둘 것
-
-- 조인 키는 `ModelID` (`ACH-XXXXXX`). 세포주 이름으로 조인하지 않습니다.
-- 유전자 컬럼은 `SYMBOL (ENTREZID)` 형식 (예: `A1BG (1)`).
-- 발현 파일은 **`IsDefaultEntryForModel == "Yes"` 필터가 선행**되어야 합니다. 거르지 않으면 같은 세포주가 중복 행으로 들어와 train/test 누출이 생깁니다.
-- **릴리스마다 파일명이 바뀝니다.** 25Q3에서 Omics 파일명 체계가 개편돼 구 이름(`OmicsExpressionProteinCodingGenesTPMLogp1.csv` 등)이 삭제됐습니다.
-- 포털에 캡차가 걸려 있어 자동 다운로드가 불가능합니다. 파일 목록만 캡차 없이 받을 수 있습니다.
 
 ## DepMap 참고 링크
 
@@ -202,7 +195,6 @@ AI-bio-proj-team-1/
 ```
 
 - `data/`, `raw/`, `interim/`, `processed/` 는 `.gitignore`에서 통째로 제외됩니다. **원본·파생 데이터는 절대 커밋하지 않습니다.**
-- **원본 데이터는 레포 밖 `adni-shared/` 에 둡니다** — ADNI는 `adni-shared/raw/`·`adni-shared/extracted/ADNI/`, DepMap은 `adni-shared/raw/DepMap/`. 레포 안 `data/` 는 전처리 산출물용입니다.
 - `docs/depmap/` 은 **자동 생성물이라 직접 수정하지 않습니다.** 내용을 고치려면 `scripts/depmap_profile.py` 의 `NOTES` 를 수정하고 다시 실행하세요.
 - 노트북에서 검증된 로직은 `src/`로 옮겨 재사용합니다.
 - 빈 폴더는 `.gitkeep`으로 구조만 git에 유지합니다.
