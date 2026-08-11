@@ -1,0 +1,39 @@
+{
+  "n_cells": 1140,
+  "n_features": 19215,
+  "n_targets": 665,
+  "sd_cut": 0.25,
+  "folds": 5,
+  "target_nan_frac": 0.0838,
+  "device": "cpu",
+  "load_s": 0.3,
+  "fit_s": 11.5,
+  "total_s": 12.3,
+  "mean": {
+    "median_r": -0.0516,
+    "frac_r_gt_0.3": 0.0,
+    "frac_r_gt_0.5": 0.0,
+    "n_r_gt_0.5": 0
+  },
+  "lineage": {
+    "median_r": 0.226,
+    "frac_r_gt_0.3": 0.2697,
+    "frac_r_gt_0.5": 0.0379,
+    "n_r_gt_0.5": 24
+  },
+  "self": {
+    "median_r": 0.0442,
+    "frac_r_gt_0.3": 0.0773,
+    "frac_r_gt_0.5": 0.0237,
+    "n_r_gt_0.5": 15
+  },
+  "ridge": {
+    "median_r": 0.4044,
+    "frac_r_gt_0.3": 0.8312,
+    "frac_r_gt_0.5": 0.1956,
+    "n_r_gt_0.5": 124
+  },
+  "ridge_beats_lineage_frac": 0.9218,
+  "ridge_beats_lineage_by_0.1_n": 516,
+  "ridge_beats_mean_frac": 0.9519
+}
