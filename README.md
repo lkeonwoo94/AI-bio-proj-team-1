@@ -1,205 +1,1061 @@
-# AI-bio-proj-team-1
+# DepMap DNA 변이 기반 유전체 불안정성 예측 및 최소 Mutation Biomarker Panel 발굴
 
-윤석현교수님과 함께하는 AI 바이오데이터 실습 1조
-
-| GitHub | 역할 |
-|---|---|
-| [wjo9956](https://github.com/wjo9956) | 팀원 |
-| [hyunhee1123](https://github.com/hyunhee1123) | 팀원 |
-| [psh03](https://github.com/psh03) | 팀원 | 
-| [lkeonwoo94](https://github.com/lkeonwoo94) | github admin |
-| [mlbi](https://github.com/combio-dku) | advisor | 
+**영문 제목**
+*Machine Learning–Based Prediction of Genomic Instability and Identification of a Candidate Minimal Mutation Biomarker Panel Using DepMap Data*
 
 ---
 
-## ⚠️ 데이터 취급 주의사항
+## 1. 프로젝트 핵심 주제
 
-이 프로젝트는 성격이 다른 두 데이터를 씁니다. **조심해야 할 지점이 서로 반대입니다.**
+DepMap 암세포주의 **hotspot 및 damaging mutation 정보만을 이용하여 WGD, CIN, LOH와 같은 유전체 불안정성 상태를 예측**하고, 예측에 반복적으로 기여하는 변이를 선별하여 **적은 수의 유전자로 구성된 후보 mutation biomarker panel**을 도출한다.
 
-| | 위험 지점 | 한 줄 요약 |
-|---|---|---|
-| **ADNI** | 파일이 밖으로 나가는 것 | 재배포 자체가 금지 |
-| **DepMap** | 리포트에 라이선스를 잘못 적는 것 | 파일 공유는 괜찮지만 표기에 주의 |
+핵심 질문은 다음 두 가지이다.
 
-### ADNI — 재배포 자체가 금지
+1. **DNA mutation만으로 WGD, CIN, LOH 상태를 예측할 수 있는가?**
+2. **전체 mutation 정보를 사용하지 않고도 소수의 유전자만으로 예측 성능을 대부분 유지할 수 있는가?**
 
-**ADNI**(Alzheimer's Disease Neuroimaging Initiative) 연구 데이터의 표준 다운로드 번들입니다. 파일명이 말해주듯 **재배포 금지** 조건이 붙은 자료이며, 대부분의 CSV가 `22Jan2026` 릴리스 날짜를 달고 있습니다.
+연구의 중심은 약물반응 분석이 아니라,
 
-| 하지 말 것 | 해도 되는 것 |
-|---|---|
-| 원본 ZIP / CSV / `.rda` 커밋 | 분석 **코드** 커밋 |
-| 개인 식별 가능 파생물 업로드 | 집계·요약 통계, 그림·표 (개인 식별 불가한 경우) |
+> **Mutation → WGD/CIN/LOH prediction → Important mutation selection → Minimal biomarker panel**
 
-커밋뿐 아니라 외부 공유(메신저, 클라우드, 스크린샷 포함)도 하지 않습니다.
-- **Jupyter 노트북은 커밋 전 반드시 출력(output)을 지웁니다.** 출력 셀에 개인 데이터가 그대로 남습니다.
-- 커밋 전 확인: `git status` 에 데이터 파일이 보이면 그대로 멈추고 팀에 알릴 것.
-
-
-### DepMap — 재배포보다 **라이선스 표기**가 문제
-
-DepMap은 ADNI와 달리 연구 목적 재배포 제한이 느슨합니다. 대신 **2026년에 약관이 바뀌어** AI 모델 학습에 관한 조항이 새로 생겼습니다.
-
-> The data made available on this website were generated for research purposes and are not intended for clinical or commercial uses, including direct sale, incorporation into a product, or **the use of the data to train, develop, or enhance machine learning or AI models other than for internal research use** (each a "Commercial Use"). For clarity, machine learning and AI models are permitted to be utilized with or on the Data **for your own internal use, or shared for non-profit research purposes**, including for process optimization and analysis. Commercial Use of the Data is not permitted under these terms and may require a separate license agreement from Broad or its contributors.
->
-> — DepMap 현행 이용약관. DepMap 개발자가 [포럼 4652](https://forum.depmap.org/t/4652)에서 인용 (2026-07-14)
-
-요약하면:
-
-- 연구 목적으로 생성된 데이터이며 임상·상업적 용도를 의도하지 않습니다. 여기에는 직접 판매, 제품에의 편입, 그리고 **내부 연구용을 벗어난 목적으로 ML·AI 모델을 학습·개발·강화하는 데 데이터를 쓰는 것**이 포함되고, 각각 "Commercial Use"로 규정됩니다.
-- 단, ML·AI 모델을 **자체 내부 용도로 사용하거나 비영리 연구 목적(공정 최적화·분석 포함)으로 공유하는 것은 명시적으로 허용**됩니다.
-- **→ 수업 프로젝트 / 비영리 연구 목적의 모델 학습·공유는 허용됩니다. 우리 용도는 문제없습니다.**
-
-| 하지 말 것 | 해도 되는 것 |
-|---|---|
-| ❌ "CC BY 4.0이라 재배포 제한 없음" 이라고 표기 | 위 **영문 원문**을 근거로 라이선스 기재 (한국어 요약은 편의용) |
-| 대용량 원본 CSV 커밋 (발현 파일 하나가 500 MB+) | 학습한 모델·집계 결과를 비영리 연구 목적으로 공유 |
-| 릴리스명 없이 "DepMap 데이터" 라고만 기재 | 릴리스명(`DepMap Public 26Q1`)·다운로드 날짜·실제 파일명 명시 |
-
-기타 알아둘 것:
-
-- **25Q2 이후 본 릴리스는 figshare에 미러링되지 않습니다.** 과거 데이터는 figshare / AWS Open Data에 남아 있지만, 최신 릴리스는 포털에서 파일 단위로 받아야 합니다.
-- 포털에 Cloudflare 캡차가 걸려 있어 **자동 다운로드가 불가능**합니다. 사람이 브라우저로 받아야 합니다.
-- 릴리스마다 **파일명이 바뀝니다.** 25Q3에서 Omics 파일명 체계가 통째로 개편돼 구 이름이 삭제됐습니다. 26Q1 파일 목록 정본: [DepMap 데이터 전반 조사](docs/research/2026-08-13/depmap_overview/lkeonwoo94.md) (3. 바뀐 파일명 · 4. 전체 파일 85개 · 6. 사용 조건) — 검증 경위는 [AI 질답 정리 Q2](docs/research/2026-08-13/depmap_gpt_qna/lkeonwoo94.md#q2-depmap-26q1-실제-파일명-검증--아래-내용이-사실인지-확인해줘)
-
+의 흐름으로 설정한다.
 
 ---
 
-## ADNI 데이터 개요
+# 2. 연구 배경
 
-| 항목 | 값 |
-|---|---|
-| 파일명 | `ADNI_data_Do_NOT_redistribute.zip` |
-| 크기 | 1,136,659,190 바이트 (약 1.14 GB) |
-| 형식 | ZIP 압축 파일 |
-| 체크섬 | `2a3579bb…f39df61f` (SHA-256) |
+암세포에서는 염색체 수와 구조가 불안정해지는 다양한 형태의 유전체 불안정성이 발생한다.
 
+본 프로젝트에서는 그중 다음 세 가지 표현형을 분석한다.
 
-<details>
-<summary>[접기/펼치기] ADNI 데이터 더 보기... </summary>
+### WGD: Whole Genome Doubling
 
-## ADNI 내부 구조
+암세포의 전체 유전체가 한 차례 이상 복제되어 염색체 세트가 증가한 상태이다.
 
-최상위에는 카테고리별 ZIP 12개가 중첩되어 있고, 그 안에 총 **283개 파일(CSV 185개, PDF 81개)** 이 들어 있습니다.
+### CIN: Chromosomal Instability
 
-| 카테고리 | 내용 | 압축 해제 크기 | 파일 수 | CSV | PDF |
-|---|---|---:|---:|---:|---:|
-| [Quick_Start](docs/adni/quick_start.md) | 전체 변수 데이터 사전 + 퀵스타트 가이드. **[필드 수가 가장 많은 테이블 기재](docs/adni/quick_start.md#도메인별-규모)** | 7.4 MB | 2 | 1 | 1 |
-| [Study_Info](docs/adni/study_info.md) | 단계별 Procedures Manual/CRF + `ADNIMERGE2` R 패키지 | 169.9 MB | 21 | 3 | 14 |
-| [Test_Data_for_Challenges](docs/adni/test_data_for_challenges.md) | 챌린지용 별도 테스트 세트 | 57.6 MB | 4 | 0 | 0 |
-| [Subject_Characteristics](docs/adni/subject_characteristics.md) | 인구학·가족력·거주지 특성 | 6.0 MB | 9 | 8 | 1 |
-| [Assessments](docs/adni/assessments.md) | 인지·기능 평가 척도 (MoCA, ADAS, FAQ, ECog 등) | 91.0 MB | 52 | 45 | 7 |
-| [Remotely_Collected_Data](docs/adni/remotely_collected_data.md) | ADNI4 원격(RMT) 트랙 스크리닝·인구학·ECog·Storyteller | 61.9 MB | 9 | 7 | 2 |
-| [ADSP_PHC](docs/adni/adsp_phc.md) | ADSP 조화 인지 점수(harmonized composite) | 451.2 MB | 29 | 21 | 7 |
-| [Medical_History](docs/adni/medical_history.md) | 병력, 병용약물, 이상반응 | 46.4 MB | 16 | 16 | 0 |
-| [Neuropathology_Results](docs/adni/neuropathology_results.md) | 부검 신경병리 소견 | 0.3 MB | 2 | 1 | 1 |
-| [Curated_Data___Docs](docs/adni/curated_data_docs.md) | ADNI-DIAN 비교 연구용 큐레이션 서브셋 | 2.2 MB | 2 | 1 | 0 |
-| [Imaging](docs/adni/imaging.md) | MRI 부피·위축도, amyloid PET SUVR 등 영상 파생 지표 | 541.1 MB | 125 | 78 | 42 |
-| [Genetic](docs/adni/genetic.md) | TOMM40, 다유전자 위험 점수(PHS), 텔로미어, tau-PET GWAS | 160.5 MB | 12 | 4 | 6 |
+염색체가 지속적으로 잘못 분리되거나 구조적으로 변화하여 염색체 수와 구성이 불안정한 상태이다.
 
+### LOH: Loss of Heterozygosity
 
+한 유전자 좌위에서 존재하던 두 대립유전자 중 하나가 소실되어 유전적 다양성이 감소한 상태이다.
 
+WGD, CIN, LOH는 서로 관련될 수 있지만 동일한 현상은 아니다.
+
+따라서 하나의 통합된 ‘유전체 불안정성’ 점수로 합치기보다는,
+
+* WGD
+* CIN
+* LOH
+
+각각을 **별도의 예측 대상**으로 분석한다.
 
 ---
 
-## ADNI 참고 링크
+# 3. 연구 목적
 
-- ADNI 공식: <https://adni.loni.usc.edu/>
-- 데이터 다운로드(LONI IDA): <https://ida.loni.usc.edu/>
-- ADNIMERGE2 문서: <https://atri-biostats.github.io/ADNIMERGE2>
+본 연구의 목적은 크게 세 단계로 구성한다.
 
-</details>
+### 목적 1. Mutation으로 WGD/CIN/LOH 예측
 
----
+DepMap의 hotspot 및 damaging mutation 정보를 입력값으로 사용하여 각 암세포주의
 
-## DepMap 데이터 개요
+* WGD + / −
+* CIN high / low
+* LOH high / low
 
-암세포주 유전자 의존성 데이터입니다. **ADNI와는 별개 트랙**으로, 항암 주제(발현 → CRISPR 의존성 예측)에 사용합니다.
-
-| 항목 | 값 |
-|---|---|
-| 릴리스 | `DepMap Public 26Q1` (2026-04-01, 최신) |
-| 받은 구성 | C-1 최소 구성 5개 파일 |
-| 총 크기 | 746,423,423 바이트 (약 746 MB) |
-| 원본 위치 | `adni-shared/raw/DepMap/` — **레포 밖** (git 추적 안 함) |
-| 무결성 | md5 5/5 매니페스트 일치 ✅ |
-| **학습 가능 표본 (n)** | **1,140** 세포주 (발현 ∩ CRISPR ∩ Model) |
-
-<details>
-<summary>[접기/펼치기] DepMap 데이터 더 보기... </summary>
-
-## DepMap 파일 구성
-
-각 파일의 shape·결측률·값 분포·주의사항은 아래 설명서에 있습니다. 설명서는 `scripts/depmap_profile.py` 가 원본에서 자동 생성합니다.
-
-| 파일 | 역할 | shape | 크기 | 설명서 |
-|---|---|---|---:|---|
-| `CRISPRGeneEffect.csv` | 출력 Y — Chronos gene effect | 1,208 × 18,531 | 440.6 MB | [열기](docs/depmap/crispr_gene_effect.md) |
-| `OmicsExpressionTPMLogp1HumanProteinCodingGenes.csv` | 입력 X — log2(TPM+1) 발현 | 1,775 × 19,220 | 305.0 MB | [열기](docs/depmap/omics_expression_tpm_logp1_human_protein_coding_genes.md) |
-| `Model.csv` | 메타데이터 · 조인 키 | 2,154 × 49 | 697.5 KB | [열기](docs/depmap/model.md) |
-| `CRISPRInferredCommonEssentials.csv` | 보조 · 타깃 필터 | 1,827 × 1 | 25.0 KB | [열기](docs/depmap/crispr_inferred_common_essentials.md) |
-| `README.txt` | DepMap 공식 릴리스 설명 | — | 47.3 KB | (원본 그대로) |
-
-→ **[docs/depmap/](docs/depmap/README.md)** 에 교집합·유전자 겹침·암종 분포·조인 규약 정리
-
-## DepMap 데이터 규모
-
-| 항목 | 값 |
-|---|---|
-| 발현 (`IsDefaultEntryForModel` 필터 후) | 1,719 세포주 |
-| CRISPR gene effect | 1,208 세포주 |
-| **교집합 = 학습 표본 n** | **1,140 세포주 / 29개 lineage** |
-| 공통 유전자 (발현 ∩ CRISPR) | 18,463 |
-| common essential (타깃에서 제외 대상) | 1,827 |
-| **선택적 의존 유전자 (제외 후 std > 0.25)** | **681** ← 실질 학습 대상 |
-
-
-## DepMap 참고 링크
-
-- DepMap 포털: <https://depmap.org/portal/>
-- 데이터 다운로드(All Data): <https://depmap.org/portal/data_page/?tab=allData>
-- 26Q1 릴리스 노트: <https://forum.depmap.org/t/4606>
-- 파일 목록 API (캡차 없음): <https://depmap.org/portal/api/no-captcha/download/files>
-- 26Q1 파일 목록 정본: [DepMap 데이터 전반 조사](docs/research/2026-08-13/depmap_overview/lkeonwoo94.md) (3. 바뀐 파일명 · 4. 전체 파일 85개)
-- 최소 구성(C-1) 선정 근거: [AI 질답 정리 Q3](docs/research/2026-08-13/depmap_gpt_qna/lkeonwoo94.md#q3-그럼-최소한으로-받아야-하는-데이터가-뭐야)
-
-</details>
+상태를 머신러닝으로 예측한다.
 
 ---
 
-## 폴더 구조
+### 목적 2. WGD/CIN/LOH 예측에 중요한 mutation 발굴
 
-```
-AI-bio-proj-team-1/
-├── data/
-│   ├── raw/          # 원본 ADNI 데이터 (수정 금지, git 추적 안 함)
-│   ├── interim/       # 전처리 중간 산출물 (git 추적 안 함)
-│   └── processed/     # 분석·모델 입력용 최종 데이터 (git 추적 안 함)
-├── notebooks/         # 탐색적 분석용 Jupyter 노트북 (출력 정책은 아래 참고)
-├── src/               # 재사용 코드 모듈
-│   ├── preprocessing/    # 데이터 로딩·전처리
-│   ├── features/        # 피처 엔지니어링
-│   ├── models/           # 모델 정의·학습
-│   └── viz/              # 시각화 함수
-├── scripts/           # 파이프라인 실행용 CLI 스크립트
-├── results/
-│   ├── figures/        # 그림 (개인 식별 불가한 것만)
-│   └── tables/          # 집계·요약 표
-├── models/            # 학습된 모델 가중치·체크포인트 (대용량은 git 추적 안 함)
-├── configs/           # 실험 설정 (yaml 등)
-├── tests/             # 테스트 코드
-└── docs/              # 프로젝트 문서
-    ├── adni/             # ADNI 데이터 사전·가이드
-    ├── depmap/           # DepMap 데이터 설명서 (scripts/depmap_profile.py 자동 생성)
-    ├── meetings/         # 회의록 (YYYY-MM-DD.md, TEMPLATE.md 참고)
-    └── research/         # 각자 조사·탐색 내용 (YYYY-MM-DD/주제/깃허브ID.md)
-```
+머신러닝 모델에서 반복적으로 선택되는 mutation을 확인한다.
 
-- `data/`, `raw/`, `interim/`, `processed/` 는 `.gitignore`에서 통째로 제외됩니다. **원본·파생 데이터는 절대 커밋하지 않습니다.**
-- `docs/depmap/` 은 **자동 생성물이라 직접 수정하지 않습니다.** 내용을 고치려면 `scripts/depmap_profile.py` 의 `NOTES` 를 수정하고 다시 실행하세요.
-- **노트북 출력은 데이터에 따라 정책이 다릅니다.**
-  - **ADNI 노트북 — 커밋 전 출력을 지웁니다.** DUA 상 재배포가 금지된 데이터라, 표·그림에 값이 남으면 그 자체가 재배포입니다.
-  - **DepMap 노트북 — 출력을 그대로 둡니다.** CC BY 4.0 공개 데이터라 제약이 없고, 설명용 노트북은 출력이 있어야 읽힙니다.
-- `results/tables/*.csv` 는 `*.csv` 전역 제외 규칙의 **예외로 추적합니다.** 문서가 본문에서 직접 링크하는 산출물이라 빠지면 링크가 깨집니다. 원본·파생 데이터는 여전히 `data/`·`raw/` 규칙으로 제외됩니다.
-- 노트북에서 검증된 로직은 `src/`로 옮겨 재사용합니다.
-- 빈 폴더는 `.gitkeep`으로 구조만 git에 유지합니다.
+예를 들어 특정 유전자 변이가 여러 cross-validation fold에서 지속적으로 WGD 예측에 기여한다면 해당 유전자를 **WGD 관련 후보 mutation biomarker**로 볼 수 있다.
 
+단, 단일 모델에서 중요도가 높게 나온 것만으로 후보를 선정하지 않는다.
+
+다음 요소를 함께 평가한다.
+
+* 반복 선택 빈도
+* feature importance 또는 coefficient
+* fold 간 순위 안정성
+* 예측 성능 기여
+* lineage가 달라져도 유지되는지 여부
+
+---
+
+### 목적 3. 최소 Mutation Biomarker Panel 도출
+
+전체 mutation feature를 사용하는 모델과
+
+* 5개
+* 10개
+* 20개
+* 50개
+
+mutation으로 구성한 축소 모델을 비교한다.
+
+이를 통해
+
+> **몇 개의 mutation만 사용해도 전체 mutation 모델의 예측력을 대부분 유지할 수 있는가?**
+
+를 확인한다.
+
+최종 결과는 임상 확정 진단 패널이 아니라,
+
+**candidate minimal mutation biomarker panel**
+
+로 제시한다.
+
+---
+
+# 4. 전체 연구 질문
+
+## RQ1
+
+### Hotspot/damaging mutation만으로 WGD를 예측할 수 있는가?
+
+입력:
+
+DNA mutation
+
+출력:
+
+WGD + / −
+
+---
+
+## RQ2
+
+### Hotspot/damaging mutation만으로 CIN을 예측할 수 있는가?
+
+입력:
+
+DNA mutation
+
+출력:
+
+CIN high / low
+
+---
+
+## RQ3
+
+### Hotspot/damaging mutation만으로 LOH를 예측할 수 있는가?
+
+입력:
+
+DNA mutation
+
+출력:
+
+LOH high / low
+
+---
+
+## RQ4
+
+### WGD, CIN, LOH가 공유하는 mutation 신호가 존재하는가?
+
+WGD, CIN, LOH를 각각 독립적으로 예측하는 모델과 함께 multi-task 모델을 비교한다.
+
+세 표현형 사이에 공통되는 mutation pattern이 있다면 공유층을 사용하는 multi-task ANN이 이를 활용할 가능성이 있다.
+
+단, ANN이 반드시 가장 높은 성능을 보여야 하는 것은 아니다.
+
+---
+
+## RQ5
+
+### 어떤 mutation이 예측에 반복적으로 기여하는가?
+
+Cross-validation 과정에서 반복적으로 선택되는 mutation을 확인한다.
+
+단일 fold에서 한 번 선택된 유전자가 아니라 여러 학습 데이터 조합에서 안정적으로 선택되는 mutation을 우선한다.
+
+---
+
+## RQ6
+
+### 몇 개의 mutation까지 줄여도 예측력이 유지되는가?
+
+다음 모델을 비교한다.
+
+> 전체 mutation
+> ↓
+> 50개
+> ↓
+> 20개
+> ↓
+> 10개
+> ↓
+> 5개
+
+성능이 거의 감소하지 않는 가장 작은 크기를 **최소 패널 후보 크기**로 평가한다.
+
+---
+
+# 5. 연구 가설
+
+### 가설 1
+
+특정 hotspot 및 damaging mutation 조합에는 WGD, CIN, LOH 상태를 구분할 수 있는 정보가 포함되어 있을 것이다.
+
+### 가설 2
+
+WGD, CIN, LOH는 서로 다른 표현형이지만 일부 공통된 mutation pattern을 공유할 수 있다.
+
+### 가설 3
+
+전체 mutation 중 일부 유전자는 여러 fold에서 반복적으로 선택되며 예측에 상대적으로 큰 기여를 할 것이다.
+
+### 가설 4
+
+전체 mutation을 모두 사용하지 않고도 일부 핵심 mutation만으로 전체 모델 성능의 상당 부분을 유지할 수 있을 것이다.
+
+가설은 검증 대상이며 결과를 미리 전제하지 않는다.
+
+---
+
+# 6. 필수 데이터
+
+## 6.1 Mutation 데이터
+
+### `OmicsSomaticMutationsMatrixHotspot.csv`
+
+역할:
+
+**Hotspot mutation feature**
+
+각 세포주에서 특정 유전자에 hotspot mutation이 존재하는지를 나타내는 입력 데이터로 사용한다.
+
+---
+
+### `OmicsSomaticMutationsMatrixDamaging.csv`
+
+역할:
+
+**Damaging mutation feature**
+
+단백질 기능에 영향을 줄 가능성이 있는 damaging mutation 정보를 입력 feature로 사용한다.
+
+---
+
+## 6.2 유전체 불안정성 데이터
+
+### `OmicsGlobalSignatures.csv`
+
+역할:
+
+**WGD / CIN / LOH 정답 label 생성**
+
+이 파일에서 실제 WGD, CIN, LOH 관련 column을 확인한다.
+
+최종적으로 다음 label을 구성한다.
+
+* WGD + / −
+* CIN high / low
+* LOH high / low
+
+실제 column명, 값의 의미, 범위, 결측값 처리 방법은 다운로드한 데이터의 data dictionary에서 확인한다.
+
+---
+
+## 6.3 세포주 정보
+
+### `Model.csv`
+
+역할:
+
+* ModelID 확인
+* cancer lineage 확인
+* mutation 데이터와 phenotype 데이터 연결
+
+특히 lineage는 모델의 일반화 가능성을 평가하는 데 사용한다.
+
+---
+
+# 7. 사용하지 않는 데이터
+
+최종 biomarker panel은 반드시 **mutation-only**로 평가한다.
+
+따라서 다음 정보는 주 모델의 입력 feature로 사용하지 않는다.
+
+### CNV
+
+WGD, CIN과 직접적으로 연결될 가능성이 높아 정답 정보를 간접적으로 제공할 위험이 있다.
+
+### Ploidy
+
+WGD와 직접적으로 연관된 정보이므로 입력 feature로 사용하지 않는다.
+
+### Gene expression
+
+선택적 확장 분석으로 사용할 수 있지만 최소 mutation panel 성능에는 포함하지 않는다.
+
+### TMB
+
+주 분석에서는 제외하며 필요할 경우 별도의 sensitivity analysis로만 사용한다.
+
+---
+
+# 8. 데이터 구조
+
+최종 분석 테이블의 개념적인 형태는 다음과 같다.
+
+| ModelID | TP53_hotspot | ATM_damaging | ARID1A_damaging | ... | WGD |  CIN |  LOH | Lineage |
+| ------- | -----------: | -----------: | --------------: | --- | --: | ---: | ---: | ------- |
+| A       |            1 |            0 |               1 | ... |   1 | high | high | Lung    |
+| B       |            0 |            1 |               0 | ... |   0 |  low | high | Breast  |
+| C       |            1 |            0 |               0 | ... |   1 | high |  low | Colon   |
+
+X:
+
+**Mutation**
+
+Y:
+
+**WGD / CIN / LOH**
+
+Lineage:
+
+**일반화 성능 확인을 위한 그룹 정보**
+
+---
+
+# 9. 데이터 전처리
+
+## 9.1 ModelID 기준 결합
+
+Mutation, Global Signature, Model 데이터를 ModelID 기준으로 결합한다.
+
+확인할 항목:
+
+* 중복 ModelID
+* 누락 ModelID
+* 데이터 간 교집합
+* 최종 사용 가능한 세포주 수
+
+---
+
+## 9.2 Mutation feature 통합
+
+Hotspot과 damaging mutation 정보를 통합한다.
+
+두 feature를 구분하여 유지할 수 있다.
+
+예:
+
+* TP53_hotspot
+* TP53_damaging
+
+동일 유전자에서 hotspot과 damaging 정보가 겹치는 경우 처리 규칙을 사전에 결정한다.
+
+---
+
+## 9.3 희귀 mutation 제거
+
+대부분의 세포주에서 0인 mutation은 머신러닝 학습에 거의 기여하지 않을 수 있다.
+
+따라서 일정 빈도 이하 mutation을 제거할 수 있다.
+
+중요한 원칙은 **빈도 기준을 전체 데이터에서 계산해서는 안 된다는 것**이다.
+
+각 training fold에서 mutation 빈도를 계산하고 해당 기준을 validation/test에 그대로 적용한다.
+
+---
+
+# 10. WGD/CIN/LOH Label 생성
+
+## WGD
+
+가능한 경우 기존 binary 정보를 이용하여
+
+* WGD+
+* WGD−
+
+로 구분한다.
+
+---
+
+## CIN
+
+연속형 score 형태라면
+
+* CIN-high
+* CIN-low
+
+로 변환한다.
+
+---
+
+## LOH
+
+연속형 score 형태라면
+
+* LOH-high
+* LOH-low
+
+로 변환한다.
+
+CIN과 LOH의 high/low threshold는 전체 데이터에서 결정하지 않는다.
+
+각 outer training fold 안에서 threshold를 결정한 뒤 validation/test 데이터에는 동일한 기준을 적용한다.
+
+---
+
+# 11. 머신러닝 분석
+
+복잡한 모델 하나만 사용하는 대신 여러 모델을 동일한 데이터 split에서 비교한다.
+
+## 기본 모델
+
+### Logistic Regression
+
+가장 단순한 baseline model.
+
+Mutation과 phenotype 사이의 선형적인 관계를 평가할 수 있다.
+
+---
+
+### LASSO / Elastic Net
+
+많은 mutation 가운데 중요한 feature를 선택하는 데 유용하다.
+
+최소 biomarker panel 선정과 연결하기 쉽다.
+
+---
+
+### Random Forest
+
+Mutation 간 비선형 관계와 interaction을 반영할 수 있다.
+
+---
+
+### XGBoost
+
+복잡한 mutation pattern을 학습할 수 있는 비선형 모델이다.
+
+---
+
+### Multi-task ANN
+
+공유 hidden layer 이후
+
+* WGD head
+* CIN head
+* LOH head
+
+를 두는 구조를 사용한다.
+
+개념적으로 다음과 같다.
+
+**Mutation input**
+
+↓
+
+**Shared representation**
+
+↙ ↓ ↘
+
+**WGD / CIN / LOH**
+
+목적은 세 표현형이 공유하는 mutation 신호가 존재하는지를 확인하는 것이다.
+
+---
+
+# 12. 모델 검증 전략
+
+이 프로젝트에서 모델 종류보다 중요한 부분이다.
+
+## Outer CV
+
+최종 모델의 성능 평가에 사용한다.
+
+Outer test 데이터는 모델 학습이나 feature selection 과정에 사용하지 않는다.
+
+---
+
+## Inner CV
+
+다음 항목을 결정한다.
+
+* hyperparameter
+* feature selection
+* classification threshold
+* panel size
+
+즉,
+
+**모델을 만드는 과정은 inner CV**
+
+**최종 성적표는 outer CV**
+
+라고 이해하면 된다.
+
+---
+
+# 13. 데이터 누출 방지
+
+다음 작업은 반드시 training fold 안에서만 수행한다.
+
+* 희귀 mutation 제거
+* scaling
+* feature selection
+* hyperparameter tuning
+* CIN/LOH threshold 결정
+* classification threshold 결정
+* biomarker panel 선정
+
+예를 들어 전체 데이터를 먼저 살펴보고 가장 중요한 10개 유전자를 선정한 뒤 cross-validation을 하면 안 된다.
+
+시험 데이터의 정보를 미리 본 것과 같은 효과가 생길 수 있기 때문이다.
+
+---
+
+# 14. 평가 지표
+
+표현형마다 다음 성능을 평가한다.
+
+### ROC-AUC
+
+전체적인 분류 능력 평가.
+
+### PR-AUC
+
+WGD+ 등 특정 class의 수가 적을 경우 특히 중요하다.
+
+### Balanced Accuracy
+
+class imbalance가 존재할 때 유용하다.
+
+### Sensitivity
+
+실제 양성 가운데 모델이 양성으로 맞힌 비율.
+
+### Specificity
+
+실제 음성 가운데 모델이 음성으로 맞힌 비율.
+
+### F1-score
+
+Precision과 recall의 균형을 평가한다.
+
+### Calibration
+
+모델이 출력한 확률을 실제 확률처럼 신뢰할 수 있는지를 평가한다.
+
+단일 metric만으로 모델을 선정하지 않는다.
+
+---
+
+# 15. Lineage 기반 검증
+
+DepMap에는 다양한 암종의 세포주가 포함되어 있다.
+
+따라서 mutation 모델이 실제로 WGD/CIN/LOH를 학습한 것이 아니라
+
+> “이 mutation pattern은 폐암에서 많다”
+
+같은 암종 정보를 학습했을 가능성을 확인해야 한다.
+
+이를 위해 lineage 기반 검증을 수행한다.
+
+---
+
+## Lineage GroupKFold
+
+같은 lineage가 training과 test에 동시에 포함되지 않도록 분리한다.
+
+---
+
+## Leave-One-Lineage-Out
+
+예를 들어 Lung lineage 전체를 test로 두고 나머지 암종으로 학습한다.
+
+이를 통해
+
+> 새로운 암종에서도 mutation biomarker가 작동하는가?
+
+를 확인한다.
+
+Random CV에서는 성능이 높지만 lineage CV에서 크게 감소한다면 해당 biomarker는 **암종 의존적 신호일 가능성**이 있다.
+
+---
+
+# 16. Biomarker 후보 선정
+
+최소 패널 선정의 핵심은 단순 feature importance 순위가 아니다.
+
+각 outer fold의 training data에서 feature selection을 반복한다.
+
+그 결과 각 유전자에 대해 다음 정보를 저장한다.
+
+* 몇 개 fold에서 선택되었는가
+* 평균 중요도
+* 중요도 순위
+* WGD/CIN/LOH 중 어떤 phenotype에 기여했는가
+* lineage validation에서도 유지되는가
+
+예를 들어 다음과 같은 결과를 만들 수 있다.
+
+| Gene   | WGD 선택 빈도 | CIN 선택 빈도 | LOH 선택 빈도 | 평균 순위 |
+| ------ | --------: | --------: | --------: | ----: |
+| Gene A |       90% |       70% |       20% |     3 |
+| Gene B |       80% |       10% |       60% |     5 |
+| Gene C |       20% |       85% |       75% |     6 |
+
+반복적으로 선택되는 유전자를 우선 biomarker 후보로 고려한다.
+
+---
+
+# 17. 최소 Mutation Panel 선정
+
+후보 유전자를 기반으로 다음 크기의 모델을 만든다.
+
+### Panel 1
+
+Top 5 genes
+
+### Panel 2
+
+Top 10 genes
+
+### Panel 3
+
+Top 20 genes
+
+### Panel 4
+
+Top 50 genes
+
+### Reference
+
+전체 mutation
+
+그리고 동일한 outer test set에서 평가한다.
+
+---
+
+# 18. 최소 패널 선정 기준
+
+목표는 무조건 가장 작은 패널을 만드는 것이 아니다.
+
+다음 네 가지를 함께 본다.
+
+### 1. 예측 성능
+
+전체 모델과 비교했을 때 성능이 얼마나 유지되는가?
+
+### 2. 안정성
+
+Cross-validation을 반복했을 때 동일한 유전자가 선택되는가?
+
+### 3. Lineage generalization
+
+새로운 lineage에서도 성능이 유지되는가?
+
+### 4. Panel size
+
+비슷한 성능이라면 더 작은 패널을 선호한다.
+
+따라서
+
+> **성능 + 안정성 + 일반화 + 패널 크기**
+
+의 균형으로 최종 패널을 결정한다.
+
+---
+
+# 19. 예상 결과 예시
+
+가상의 결과가 다음과 같다고 가정한다.
+
+| Panel    | WGD AUC | CIN AUC | LOH AUC |
+| -------- | ------: | ------: | ------: |
+| 전체       |    0.86 |    0.81 |    0.79 |
+| 50 genes |    0.86 |    0.80 |    0.79 |
+| 20 genes |    0.84 |    0.79 |    0.78 |
+| 10 genes |    0.83 |    0.78 |    0.77 |
+| 5 genes  |    0.74 |    0.69 |    0.70 |
+
+이 경우에는
+
+> **10~20개 mutation으로 전체 모델의 예측력을 상당 부분 유지할 가능성이 있다.**
+
+라고 해석할 수 있다.
+
+반대로 20개 이하에서 성능이 크게 감소하면 억지로 최소 패널을 만들지 않는다.
+
+> **WGD/CIN/LOH 관련 mutation 신호가 여러 유전자에 분산되어 있어 소수 패널로 축소하기 어렵다.**
+
+는 것도 충분히 의미 있는 결과이다.
+
+---
+
+# 20. 최종 결과물
+
+프로젝트 종료 시 최소한 다음 결과를 제시한다.
+
+## 결과 1. WGD 예측 성능
+
+각 머신러닝 모델의 성능 비교.
+
+## 결과 2. CIN 예측 성능
+
+각 머신러닝 모델의 성능 비교.
+
+## 결과 3. LOH 예측 성능
+
+각 머신러닝 모델의 성능 비교.
+
+## 결과 4. Multi-task 모델 비교
+
+WGD/CIN/LOH를 동시에 학습하는 것이 개별 모델보다 유리한지 확인.
+
+## 결과 5. 중요 mutation 후보
+
+반복 feature selection 결과.
+
+## 결과 6. Minimal panel curve
+
+5 / 10 / 20 / 50 / 전체 mutation 모델 성능 비교.
+
+## 결과 7. Lineage validation
+
+새로운 암종에서도 모델이 작동하는지 평가.
+
+## 결과 8. Candidate minimal mutation biomarker panel
+
+최종 후보 유전자 목록.
+
+---
+
+# 21. 필수 시각화
+
+최종 발표에서는 다음 그림을 우선한다.
+
+### Figure 1. 연구 전체 흐름
+
+**Mutation → WGD/CIN/LOH → Feature selection → Minimal panel**
+
+### Figure 2. WGD/CIN/LOH 분포
+
+세 phenotype의 class distribution.
+
+### Figure 3. 모델 성능 비교
+
+Logistic / Elastic Net / RF / XGBoost / ANN의 ROC-AUC 및 PR-AUC.
+
+### Figure 4. Biomarker selection stability
+
+유전자별 fold 선택 빈도.
+
+### Figure 5. Panel size–performance curve
+
+X축:
+
+5 / 10 / 20 / 50 / All genes
+
+Y축:
+
+예측 성능.
+
+이 그림이 최소 패널 결과의 가장 중요한 시각화가 된다.
+
+### Figure 6. Lineage CV 결과
+
+Random CV와 lineage-based CV 성능 비교.
+
+---
+
+# 22. 14일 분석 일정
+
+## Day 1
+
+데이터 확인.
+
+* 실제 파일명
+* 데이터 버전
+* ModelID
+* WGD/CIN/LOH 관련 column
+* lineage column
+
+확정.
+
+---
+
+## Day 2
+
+Mutation / Global Signature / Model 데이터 로드 및 QC.
+
+* 중복
+* 결측
+* ModelID 교집합
+
+확인.
+
+---
+
+## Day 3
+
+Hotspot + damaging mutation matrix 구축.
+
+WGD/CIN/LOH 및 lineage 정보 결합.
+
+---
+
+## Day 4
+
+WGD/CIN/LOH 분포와 mutation 빈도 QC.
+
+Cross-validation 구조 확정.
+
+---
+
+## Day 5
+
+Nested CV pipeline 구축.
+
+Training fold 내부에서
+
+* threshold
+* mutation filtering
+* feature selection
+
+이 수행되는지 확인.
+
+---
+
+## Day 6
+
+Logistic Regression baseline 모델.
+
+---
+
+## Day 7
+
+LASSO / Elastic Net 모델.
+
+---
+
+## Day 8
+
+Random Forest / XGBoost 모델.
+
+---
+
+## Day 9
+
+Multi-task ANN 모델.
+
+---
+
+## Day 10
+
+전체 모델 성능 비교.
+
+* ROC-AUC
+* PR-AUC
+* balanced accuracy
+* F1
+* calibration
+
+정리.
+
+---
+
+## Day 11
+
+Fold별 feature selection 결과 집계.
+
+반복적으로 선택되는 mutation 후보 확인.
+
+---
+
+## Day 12
+
+5 / 10 / 20 / 50 / 전체 mutation panel 비교.
+
+---
+
+## Day 13
+
+Lineage GroupKFold 및 Leave-One-Lineage-Out 검증.
+
+최소 패널 안정성 확인.
+
+---
+
+## Day 14
+
+결과 통합.
+
+* 최종 biomarker 후보
+* panel size
+* 성능
+* 안정성
+* lineage generalization
+* 한계
+
+정리 및 발표자료 작성.
+
+---
+
+# 23. 프로젝트 우선순위
+
+## Must-have
+
+1. Hotspot/damaging mutation matrix 구축
+2. WGD/CIN/LOH label 생성
+3. Logistic 또는 Elastic Net baseline
+4. 최소 1개 비선형 모델 비교
+5. Nested CV
+6. Training-fold 내부 feature selection
+7. WGD/CIN/LOH별 예측 성능
+8. 반복 feature selection
+9. 5/10/20/50/전체 panel 비교
+10. Lineage 기반 validation
+11. Mutation-only 최종 panel
+
+---
+
+## Nice-to-have
+
+* Multi-task ANN
+* MSI 확장
+* Gene expression 추가 비교
+* WGD/CIN/LOH 8개 조합 분석
+* SHAP 등 추가 model interpretation
+
+시간이 부족하면 Nice-to-have 항목부터 제외한다.
+
+---
+
+# 24. 약물반응 분석의 위치
+
+약물반응 분석은 본 연구의 필수 축에서 제외하고 **후속 확장 연구**로 둔다.
+
+최소 mutation panel을 먼저 확보한 뒤,
+
+> “이 패널로 예측된 WGD/CIN/LOH 상태가 특정 약물 반응과도 연결되는가?”
+
+를 추가적으로 분석할 수 있다.
+
+따라서 본 프로젝트의 완성 여부는 약물반응 분석 성공 여부와 무관하다.
+
+핵심 산출물은
+
+> **WGD/CIN/LOH를 예측하는 mutation signature와 candidate minimal mutation biomarker panel**
+
+이다.
+
+---
+
+# 25. 결과 해석 시나리오
+
+## 예측 성능 높음 + 작은 패널 성능 유지
+
+가장 이상적인 결과이다.
+
+> Hotspot/damaging mutation에는 WGD/CIN/LOH 상태를 구분하는 신호가 존재하며, 일부 mutation만으로 전체 모델 성능의 상당 부분을 유지할 수 있었다.
+
+최소 biomarker panel 후보를 제시한다.
+
+---
+
+## 예측 성능 높음 + 작은 패널 성능 감소
+
+Mutation으로 WGD/CIN/LOH는 예측 가능하지만 정보가 여러 유전자에 분산되어 있을 가능성이 있다.
+
+최소 패널을 무리하게 제시하지 않는다.
+
+---
+
+## Random CV 높음 + Lineage CV 낮음
+
+Mutation signal이 특정 암종에 의존할 가능성이 있다.
+
+범암종 biomarker라고 주장하지 않고 lineage-dependent candidate라고 해석한다.
+
+---
+
+## 전체 예측 성능 낮음
+
+Hotspot/damaging mutation만으로 WGD/CIN/LOH를 안정적으로 복원하기 어렵다는 결과이다.
+
+이 역시 의미 있는 결과이며 mutation-only 접근의 한계를 보여준다.
+
+---
+
+# 26. 최종 결론에서 답해야 하는 질문
+
+프로젝트 종료 시 다음 다섯 가지를 명확히 답할 수 있어야 한다.
+
+### ①
+
+**DNA mutation만으로 WGD/CIN/LOH를 예측할 수 있었는가?**
+
+### ②
+
+**어떤 모델이 가장 안정적인 성능을 보였는가?**
+
+### ③
+
+**어떤 mutation이 반복적으로 중요한 feature로 선택되었는가?**
+
+### ④
+
+**전체 mutation을 몇 개까지 줄여도 성능이 유지되었는가?**
+
+### ⑤
+
+**이 결과가 다른 cancer lineage에서도 유지되었는가?**
+
+---
+
+# 27. 권장 최종 결론문 구조
+
+본 연구에서는 DepMap의 hotspot 및 damaging mutation 정보를 이용하여 WGD, CIN, LOH 상태를 예측하였다. Logistic Regression, LASSO/Elastic Net, Random Forest, XGBoost 및 multi-task ANN을 동일한 검증 조건에서 비교하고, lineage 기반 검증을 통해 암종 간 일반화 가능성을 평가하였다.
+
+또한 각 cross-validation fold에서 반복적으로 선택되는 mutation을 집계하여 WGD, CIN, LOH 예측에 기여하는 후보 유전자를 선별하였다. 이후 5, 10, 20, 50개 mutation으로 구성된 축소 모델과 전체 mutation 모델을 nested cross-validation 환경에서 비교하여 예측력과 안정성을 유지할 수 있는 최소 panel 크기를 평가하였다.
+
+최종적으로 본 연구는 **DNA mutation만으로 유전체 불안정성 상태를 어느 수준까지 예측할 수 있는지 평가하고, 예측에 필요한 정보를 소수의 mutation으로 축약할 수 있는지를 검증하여 candidate minimal mutation biomarker panel을 제시하는 것**을 목표로 한다.
+
+해당 패널은 임상 진단용 확정 바이오마커가 아니라 DepMap 내부 검증을 통해 도출된 연구용 후보이며, 향후 독립 코호트와 실험적 검증이 필요하다.
+
+---
+
+# 핵심 프로젝트 구조
+
+**DepMap Hotspot / Damaging Mutation**
+
+↓
+
+**WGD / CIN / LOH Prediction**
+
+↓
+
+**Model Comparison**
+
+↓
+
+**Repeated Feature Selection**
+
+↓
+
+**Mutation Biomarker Candidates**
+
+↓
+
+**5 / 10 / 20 / 50 / All Comparison**
+
+↓
+
+**Lineage Validation**
+
+↓
+
+## **Candidate Minimal Mutation Biomarker Panel**
