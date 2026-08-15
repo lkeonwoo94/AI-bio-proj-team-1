@@ -7,8 +7,11 @@
 
 data_root: data/depmap
 
-# DepMap 릴리스 버전. Day 1 에서 실제 다운로드한 버전으로 확정한다.
-release: TBD   # 예: 24Q2
+# DepMap 릴리스 버전 (Day 1 확정)
+release: "26Q1"
+# 주의: 릴리스 표기는 함께 받은 DepMap README.txt 기준이다.
+# CSV 파일 자체에는 버전이 없으므로, 다른 시점에 받은 파일이 섞이지 않았는지
+# ModelID 교집합(02_qc_merge.py)으로 간접 확인한다.
 
 files:
   # --- 입력 feature (RQ1~RQ3) ---
