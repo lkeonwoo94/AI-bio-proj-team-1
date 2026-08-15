@@ -1035,6 +1035,8 @@ Hotspot/damaging mutation만으로 WGD/CIN/LOH를 안정적으로 복원하기 �
 ├── configs/
 │   ├── data.yaml          # 데이터 경로·파일명·릴리스 버전
 │   └── experiment.yaml    # CV, label, feature, panel, metric 설정
+├── data/
+│   └── depmap/            # DepMap 원본 (git 미추적, README.md 만 추적)
 ├── docs/
 │   ├── depmap/            # 데이터 사전 (컬럼 의미, 값 범위)
 │   ├── meetings/
@@ -1060,15 +1062,26 @@ Hotspot/damaging mutation만으로 WGD/CIN/LOH를 안정적으로 복원하기 �
 
 ## 데이터 위치
 
-원본 DepMap CSV 는 용량이 크므로 저장소에 넣지 않는다.
-`configs/data.yaml` 의 `data_root` 가 가리키는 저장소 밖 디렉터리에 두고,
-환경변수 `DEPMAP_DATA_ROOT` 로 각자 위치를 덮어쓴다.
+DepMap 파일은 저장소 안 `data/depmap/` 에 두되 **git 에는 올리지 않는다**
+(`.gitignore` 처리). 경로는 통일하면서 용량 제한과 재배포 문제는 피하는 방식이다.
+
+* 데이터 파일 → 각자 DepMap 포털에서 받아 `data/depmap/` 에 넣는다.
+* 무엇을 받아야 하는지 → `data/depmap/README.md` (이 파일만 추적된다).
+* 파일명·릴리스 버전 → `configs/data.yaml` 에 기록해 팀원 간 버전을 맞춘다.
 
 ```bash
 python scripts/01_check_data.py
 ```
 
-로 필요한 파일이 갖춰졌는지 먼저 확인한다.
+로 필요한 파일이 갖춰졌는지 확인한다.
+
+다른 위치에 데이터를 두려면 환경변수로 덮어쓴다.
+
+```bash
+export DEPMAP_DATA_ROOT=/path/to/DepMap
+```
+
+ADNI 원본은 재배포가 금지되어 있어 이 저장소 안에 두지 않는다.
 
 ## 누출 방지가 구조에 반영된 지점
 

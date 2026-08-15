@@ -1,15 +1,12 @@
-# --- 데이터 (저장소 밖에 둔다. configs/data.yaml 의 data_root 참조) ---
-/data/
-*.csv.gz
-*.parquet
-*.h5
-
-# raw DepMap CSV 는 용량이 크므로 절대 커밋하지 않는다.
-# results/tables/*.csv 는 분석 산출물이므로 예외로 추적한다.
-/**/OmicsSomaticMutationsMatrix*.csv
-/**/OmicsGlobalSignatures.csv
-/**/Model.csv
-!results/tables/*.csv
+# --- 데이터 ---
+# 데이터 파일은 data/ 안에 두되 git 에는 올리지 않는다.
+# 용량(GitHub 파일당 100MB)과 재배포 정책 문제를 원천적으로 피하기 위함이다.
+# 어떤 파일을 어디서 받아야 하는지는 data/depmap/README.md 와
+# configs/data.yaml 에 기록해 공유한다.
+data/*
+!data/depmap/
+data/depmap/*
+!data/depmap/README.md
 
 # --- 캐시 ---
 __pycache__/

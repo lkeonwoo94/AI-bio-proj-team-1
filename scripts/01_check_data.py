@@ -28,14 +28,19 @@ def check_presence() -> dict[str, Path]:
     missing = missing_data_files()
 
     files = load_config("data")["files"]
-    for key in files:
-        mark = "없음" if key in missing else "있음"
-        print(f"  [{mark}] {key:20s} {files[key]}")
+    for key, name in files.items():
+        if key in missing:
+            print(f"  [없음] {key:20s} {name}")
+            continue
+        size_mb = (data_root() / name).stat().st_size / 1024**2
+        print(f"  [있음] {key:20s} {name}  ({size_mb:.1f}MB)")
 
     if missing:
-        print("\n다음 파일을 DepMap 포털에서 받아야 합니다:")
-        for key, path in missing.items():
-            print(f"  - {path.name}  ->  {path.parent}")
+        print("\n다음 파일을 DepMap 포털에서 받아 위 경로에 넣으세요:")
+        for path in missing.values():
+            print(f"  - {path.name}")
+        print("  (자세한 내용: data/depmap/README.md)")
+
     return missing
 
 
