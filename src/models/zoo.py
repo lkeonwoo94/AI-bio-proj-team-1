@@ -62,14 +62,17 @@ def logistic() -> ModelSpec:
 
 def elastic_net() -> ModelSpec:
     """L1/L2 혼합 규제 — feature selection 과 직접 연결된다 (README §11)."""
+    # saga 는 elasticnet 을 지원하는 유일한 solver 지만 느리다.
+    # max_iter 3000 / tol 1e-4 로는 5x5 nested CV 가 10분을 넘겨 실용적이지 않았다.
+    # 규제가 강해 계수가 빠르게 안정되므로 tol 을 1e-3 으로 완화했다.
     pipe = Pipeline([
         _filter_step(),
         ("scale", StandardScaler(with_mean=True)),
-        ("clf", LogisticRegression(penalty="elasticnet", solver="saga", max_iter=3000,
-                                   class_weight="balanced", random_state=_seed())),
+        ("clf", LogisticRegression(penalty="elasticnet", solver="saga", max_iter=1000,
+                                   tol=1e-3, class_weight="balanced", random_state=_seed())),
     ])
     return ModelSpec("elastic_net", lambda: pipe,
-                     {"clf__C": [0.05, 0.2, 1.0], "clf__l1_ratio": [0.3, 0.7]},
+                     {"clf__C": [0.05, 0.5], "clf__l1_ratio": [0.3, 0.7]},
                      importance="coef")
 
 
