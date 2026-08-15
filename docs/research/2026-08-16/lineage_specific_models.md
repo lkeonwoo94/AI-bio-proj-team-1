@@ -76,6 +76,20 @@ hotspot/damaging mutation 과 WGD 사이에 학습 가능한 관계가 거의 �
 
 25개 (암종 × 표현형) 조합 중 5개는 내부 학습 AUC 가 0.5 미만이었다.
 
+## Figure 7
+
+`results/figures/fig7_lineage_specific.png` (`scripts/12_plot_lineage_specific.py`)
+
+* **(a) 산점도** — x 는 LOLO, y 는 내부 학습. 점이 대각선에 몰려 있으면
+  두 방식의 성능이 같다는 뜻이고, 곧 전이 실패가 아니라는 근거가 된다.
+  오차막대는 내부 학습의 fold 표준편차로, 이 분석의 불확실성을 함께 보여준다.
+* **(b) 라벨 정의 함정** — internal 기준에서 CIN 만 +0.074 로 튀어 보이지만
+  external 기준으로 맞추면 +0.011 로 사라진다. WGD 는 이진 label 이라
+  두 막대가 동일하다.
+* **(c) WGD 암종별 비교** — 조건이 완전히 동일한 유일한 표현형.
+  Lung 은 양쪽 다 무작위 수준(0.449 / 0.494)이고, CNS/Brain 은 양쪽 다 높다
+  (0.791 / 0.766).
+
 ## 산출물
 
 | 파일 | 내용 |
