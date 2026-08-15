@@ -52,23 +52,41 @@ def run_nested_cv(
     scoring: str = "roc_auc",
     n_jobs: int = -1,
     verbose: bool = True,
+    outer_folds: int | None = None,
+    inner_folds: int | None = None,
+    pre_binarized: bool = False,
 ) -> NestedResult:
-    """하나의 (모델, 표현형, split 방식) 조합에 대한 nested CV."""
+    """하나의 (모델, 표현형, split 방식) 조합에 대한 nested CV.
+
+    outer_folds / inner_folds 를 주면 config 기본값을 덮어쓴다.
+    암종 내부 분석처럼 표본이 작을 때 fold 를 줄이기 위한 것이다.
+
+    pre_binarized=True 면 y_raw 가 이미 0/1 이라고 보고 fold 안에서
+    threshold 를 다시 잡지 않는다. 암종 외부에서 정한 기준을 그대로
+    적용하려는 경우에 쓴다. 이때 y_raw 는 해당 암종 데이터를 보지 않고
+    만들어진 것이어야 한다.
+    """
     X_values = X.to_numpy()
     feature_names = np.asarray(X.columns)
 
     # outer split 을 나누려면 stratify 용 이진 label 이 필요하다.
     # 여기서 쓰는 전체 기준 이진화는 '누가 어느 fold 에 가는가' 를 정할 뿐이며,
     # 학습에 쓰이는 label 은 각 fold 안에서 다시 만든다.
-    y_strat = LabelBinarizer(target).fit_transform(y_raw)
+    y_strat = y_raw.astype(int) if pre_binarized else LabelBinarizer(target).fit_transform(y_raw)
 
     metric_rows, importance_rows = [], []
 
-    for fold, (tr, te) in enumerate(outer_splits(y_strat.to_numpy(), groups, scheme=scheme)):
+    for fold, (tr, te) in enumerate(
+        outer_splits(y_strat.to_numpy(), groups, scheme=scheme, n_splits=outer_folds)
+    ):
         # --- 1~2. label threshold 는 training fold 에서만 ---
-        binz = LabelBinarizer(target).fit(y_raw.iloc[tr])
-        y_tr = binz.transform(y_raw.iloc[tr]).to_numpy()
-        y_te = binz.transform(y_raw.iloc[te]).to_numpy()
+        if pre_binarized:
+            y_tr = y_raw.iloc[tr].astype(int).to_numpy()
+            y_te = y_raw.iloc[te].astype(int).to_numpy()
+        else:
+            binz = LabelBinarizer(target).fit(y_raw.iloc[tr])
+            y_tr = binz.transform(y_raw.iloc[tr]).to_numpy()
+            y_te = binz.transform(y_raw.iloc[te]).to_numpy()
 
         if len(np.unique(y_tr)) < 2:
             if verbose:
@@ -82,14 +100,15 @@ def run_nested_cv(
             warnings.simplefilter("ignore", ConvergenceWarning)
             search = GridSearchCV(
                 spec.build(), spec.param_grid, scoring=scoring,
-                cv=inner_cv(), n_jobs=n_jobs, refit=True, error_score="raise",
+                cv=inner_cv(n_splits=inner_folds), n_jobs=n_jobs, refit=True,
+                error_score="raise",
             )
             search.fit(X_tr, y_tr)
             best = search.best_estimator_
 
             # --- 5. 분류 threshold 도 training fold 안에서 ---
             oof = cross_val_predict(
-                search.best_estimator_, X_tr, y_tr, cv=inner_cv(),
+                search.best_estimator_, X_tr, y_tr, cv=inner_cv(n_splits=inner_folds),
                 method="predict_proba", n_jobs=n_jobs,
             )[:, 1]
         threshold = choose_threshold(y_tr, oof)
