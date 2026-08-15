@@ -1,0 +1,64 @@
+# 실험 설정
+#
+# 여기 있는 값은 "탐색 범위"이며, 실제 선택은 반드시 inner CV 안에서 이뤄진다.
+# 이 파일에 최종 threshold 를 하드코딩하면 데이터 누출이다 (README §13).
+
+seed: 42
+
+cv:
+  outer_folds: 5
+  inner_folds: 5
+  repeats: 1
+  stratify_by: label      # outer split 은 label 기준 stratified
+  # lineage 검증용 별도 split (README §15)
+  lineage_scheme: group_kfold   # group_kfold | leave_one_lineage_out
+
+labels:
+  # WGD 는 보통 binary 로 제공된다. Day 1 에서 컬럼명 확정.
+  wgd:
+    source_column: TBD
+    type: binary
+  # CIN / LOH 가 연속형일 경우 high/low 로 이진화한다.
+  # 기준값은 반드시 각 training fold 안에서 계산한다 (README §10).
+  cin:
+    source_column: TBD
+    type: continuous
+    binarize: median      # median | quantile
+    quantile: 0.75        # binarize=quantile 일 때만 사용
+  loh:
+    source_column: TBD
+    type: continuous
+    binarize: median
+    quantile: 0.75
+
+features:
+  # hotspot / damaging 중복 유전자 처리 규칙 (README §9.2) — Day 3 확정
+  merge_rule: keep_separate   # keep_separate | union_or
+  suffix:
+    hotspot: _hotspot
+    damaging: _damaging
+  # 희귀 mutation 제거. 빈도는 training fold 에서만 계산한다 (README §9.3).
+  min_mutation_count: 10      # 절대 개수
+  min_mutation_freq: null     # 비율 기준을 쓸 경우 (둘 중 하나만)
+
+models:
+  - logistic
+  - elastic_net
+  - random_forest
+  - xgboost
+  - multitask_ann   # Nice-to-have (README §23)
+
+panel:
+  sizes: [5, 10, 20, 50]
+  reference: all
+
+metrics:
+  primary: roc_auc
+  report:
+    - roc_auc
+    - pr_auc
+    - balanced_accuracy
+    - sensitivity
+    - specificity
+    - f1
+    - brier          # calibration

@@ -1028,6 +1028,56 @@ Hotspot/damaging mutation만으로 WGD/CIN/LOH를 안정적으로 복원하기 �
 
 ---
 
+# 28. 저장소 구조
+
+```
+.
+├── configs/
+│   ├── data.yaml          # 데이터 경로·파일명·릴리스 버전
+│   └── experiment.yaml    # CV, label, feature, panel, metric 설정
+├── docs/
+│   ├── depmap/            # 데이터 사전 (컬럼 의미, 값 범위)
+│   ├── meetings/
+│   └── research/
+├── notebooks/             # 탐색·발표용. 로직은 src/ 를 import 한다
+├── results/
+│   ├── figures/           # Figure 1~6 (§21)
+│   └── tables/            # 성능·선택빈도·패널 비교 표
+├── scripts/               # 01~10 파이프라인 단계 (scripts/README.md 참고)
+├── src/
+│   ├── config.py          # 설정 로딩, 데이터 경로 해석
+│   ├── data/              # 로딩·ModelID 병합 (§9.1)
+│   ├── labels/            # WGD/CIN/LOH label 생성 (§10)
+│   ├── features/          # mutation matrix, 희귀 변이 필터 (§9.2-9.3)
+│   ├── cv/                # nested CV, lineage split (§12, §15)
+│   ├── models/            # logistic, enet, RF, XGB, ANN (§11)
+│   ├── selection/         # 반복 feature selection 집계 (§16)
+│   ├── panel/             # 최소 패널 구성·비교 (§17-18)
+│   ├── evaluation/        # 성능 지표, calibration (§14)
+│   └── viz/               # 그림 생성 (§21)
+└── tests/
+```
+
+## 데이터 위치
+
+원본 DepMap CSV 는 용량이 크므로 저장소에 넣지 않는다.
+`configs/data.yaml` 의 `data_root` 가 가리키는 저장소 밖 디렉터리에 두고,
+환경변수 `DEPMAP_DATA_ROOT` 로 각자 위치를 덮어쓴다.
+
+```bash
+python scripts/01_check_data.py
+```
+
+로 필요한 파일이 갖춰졌는지 먼저 확인한다.
+
+## 누출 방지가 구조에 반영된 지점
+
+`labels`, `features`, `cv` 를 별도 모듈로 분리한 이유는 §13 때문이다.
+threshold 결정, 희귀 변이 필터, feature selection 은 모두 fold 를 인자로 받는
+함수여야 하며, 전체 데이터를 한 번에 보는 전처리 함수를 만들지 않는다.
+
+---
+
 # 핵심 프로젝트 구조
 
 **DepMap Hotspot / Damaging Mutation**
