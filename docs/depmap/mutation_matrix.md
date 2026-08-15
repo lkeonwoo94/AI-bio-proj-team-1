@@ -7,7 +7,7 @@ DepMap Public 26Q1. 입력 feature 의 출처.
 | 파일 | 크기 | 행 | 유전자 |
 | --- | --- | --- | --- |
 | `...MatrixHotspot.csv` | 6.6 MB | 3,044 | 554 |
-| `...MatrixDamaging.csv` | 228 MB | 3,044 | 19,577 |
+| `...MatrixDamaging.csv` | 228 MB | 3,044 | 19,578 |
 
 두 파일 모두 `OmicsGlobalSignatures.csv` 와 같은 3,044 행 구조이며,
 `IsDefaultEntryForModel == "Yes"` 로 걸러 1,968 세포주가 된다.
@@ -23,9 +23,13 @@ IsDefaultEntryForModel, IsDefaultEntryForMC
 섞여 들어간다. 반드시 `ModelID` 를 명시적으로 키로 지정하고 메타 컬럼을
 제외한다. 목록은 `configs/experiment.yaml` 의 `features.meta_columns` 에 있다.
 
-## 값
+## 컬럼명과 값
 
-유전자별 변이 개수(정수). 0 이 대부분이며 1 이상이 변이 존재를 뜻한다.
+컬럼명은 `SYMBOL (EntrezID)` 형식이다 (예: `TP53 (7157)`).
+Entrez ID 가 없는 유전자는 `ZNF781 (Unknown)` 처럼 표기되며 이것도 정상적인
+유전자 컬럼이다 — 메타 컬럼으로 오인해 걸러내지 않는다.
+
+값은 유전자별 변이 개수(정수)다. 0 이 대부분이며 1 이상이 변이 존재를 뜻한다.
 본 분석은 존재 여부만 쓰므로 `> 0` 으로 이진화한다.
 
 ## 희박성 — 설계에 영향을 주는 지점
