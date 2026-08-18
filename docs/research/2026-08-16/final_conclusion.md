@@ -191,6 +191,13 @@ AUC 0.314 로 최저다.
 점이 그만큼 더 확실해졌다 — 다만 lineage 수가 24 개뿐이라(|rho|>0.4 는
 되어야 p<0.05) 통계적 검정력 자체가 낮다는 한계는 남는다.
 
+다섯 가설을 한 그림으로 모은 것이 Figure 8 이다
+(`results/figures/fig8_lineage_hypotheses.png`,
+`python scripts/16_plot_lineage_hypotheses.py`). 어느 패널에서도
+뚜렷한 추세선이 보이지 않고, Fibroblast·Thyroid(위쪽 성공 사례)와
+Eye·Lung(아래쪽 실패 사례)이 x축 위치와 무관하게 흩어져 있다는 점이
+"단순 교란변수로 설명되지 않는다"는 결론을 시각적으로 뒷받침한다.
+
 재현: `python scripts/15_lineage_hypothesis_test.py`
 
 **후속 분석(암종 내부 학습)으로 한 가지는 배제했다.** 세포주 60개 이상인
