@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pandas as pd
 
 from src.config import REPO_ROOT, data_path
+from src.data.merge import load_cohort
 
 TABLES = REPO_ROOT / "results" / "tables"
 META = ["Unnamed: 0", "SequencingID", "ModelID", "ModelConditionID",
@@ -38,6 +39,29 @@ def mutation_matrix_stats() -> pd.DataFrame:
             "n_cols_feature": genes.shape[1], "dtype": "int (변이 개수)",
             "min": vals.min(), "max": vals.max(), "mean": vals.mean(), "var": vals.var(),
             "binarized_positive_rate": (vals > 0).mean(),
+        })
+    return pd.DataFrame(rows)
+
+
+def cohort_matrix_stats() -> pd.DataFrame:
+    """학습 직전 X (cohort.X) 통계 — 병합·이진화 완료, fold 필터 이전.
+
+    이 다음 단계(RareMutationFilter)는 fold 마다 다시 계산되므로
+    단일 통계로 고정할 수 없다. 즉 여기가 '고정 가능한 마지막 지점'이다.
+    """
+    cohort = load_cohort()
+    X = cohort.X
+    vals = X.to_numpy()
+    is_hot = X.columns.str.endswith("_hotspot")
+
+    rows = []
+    for name, mask in (("전체", slice(None)), ("hotspot", is_hot), ("damaging", ~is_hot)):
+        v = vals if isinstance(mask, slice) else vals[:, mask]
+        rows.append({
+            "구분": name, "n_rows": X.shape[0], "n_cols": v.shape[1],
+            "dtype": str(X.dtypes.iloc[0]),
+            "min": v.min(), "max": v.max(), "mean": v.mean(), "var": v.var(),
+            "positive_rate": v.mean(),
         })
     return pd.DataFrame(rows)
 
@@ -70,9 +94,14 @@ def main() -> int:
     TABLES.mkdir(parents=True, exist_ok=True)
 
     mat = mutation_matrix_stats()
-    print("[Mutation matrix] row/col 과 셀 값 분포")
+    print("[Mutation matrix — 병합 전 원본] row/col 과 셀 값 분포")
     print(mat.to_string(index=False))
     mat.to_csv(TABLES / "doc_mutation_matrix_stats.csv", index=False)
+
+    cohort_mat = cohort_matrix_stats()
+    print("\n[학습 직전 X — cohort.X, 병합·이진화 완료] row/col 과 셀 값 분포")
+    print(cohort_mat.to_string(index=False))
+    cohort_mat.to_csv(TABLES / "doc_cohort_X_stats.csv", index=False)
 
     sig = global_signatures_stats()
     print("\n[OmicsGlobalSignatures.csv]")

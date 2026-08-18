@@ -38,6 +38,51 @@ row 는 세포주당 대표 시퀀싱 프로파일(`IsDefaultEntryForModel=="Yes
 
 ---
 
+## 1-b. 학습 직전 X — `cohort.X` (병합·이진화 완료, fold 필터 이전)
+
+`src/data/merge.py:load_cohort()` 가 hotspot/damaging 을 ModelID 교집합으로
+결합하고 `> 0` 이진화까지 마친 표. 실제로 `run_nested_cv()` 에 넘어가는
+행렬이며, 여기서 outer/inner fold 로 나뉜 뒤에야 `RareMutationFilter` 가
+적용된다(§13 누출 방지 — 필터 기준은 fold 마다 다시 계산되므로 이 표에는
+아직 반영되어 있지 않다).
+
+| 구분 | row | col(=차원) | dtype | min | max | mean | var | 양성비율 |
+| --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| **전체 X** | 1,631 | 20,132 | int8 (0/1) | 0 | 1 | 0.002741 | 0.002733 | 0.274% |
+| ├ hotspot 구간 | 1,631 | 554 | int8 (0/1) | 0 | 1 | 0.003292 | 0.003282 | 0.329% |
+| └ damaging 구간 | 1,631 | 19,578 | int8 (0/1) | 0 | 1 | 0.002725 | 0.002718 | 0.273% |
+
+메모리 31.3 MB (`int8` dtype, dense 배열 기준). `y` 는 `(1631, 3)`
+(WGD/CIN/LoHFraction, 아직 CIN·LOH 는 연속형 원값), `groups` 는 lineage
+32종.
+
+### 1번 절과의 차이
+
+1번 절은 hotspot/damaging 을 **각 파일 단독으로**, ModelID 교집합을 걷기
+전(1,968 세포주) 값이다. 1-b 는 두 파일을 **합치고 라벨 결측(337행)까지
+제거한 후**(1,631 세포주) 값이라 row 가 더 적다. 값 자체(dtype, min, max,
+mean, var)가 크게 다르지 않은 것은 병합으로 빠진 337개 세포주의 mutation
+분포가 전체와 특별히 다르지 않다는 뜻이다.
+
+### 여기서 한 단계 더 — fold 안의 실제 학습 입력
+
+이 표는 `RareMutationFilter` 적용 **이전** 상태다. 실제 매 outer fold 의
+training 데이터에서는 희귀 변이가 제거되어 열 수가 1,162~1,671 개로
+줄어든다(`cv_random_*.csv` 의 `n_features_kept` 컬럼, 모델·fold·표현형마다
+다름 — 필터 기준(`min_mutation_count=10`)이 training 세포주 구성에 따라
+달라지기 때문이다). 이 값은 fold 마다 다시 계산되므로 "학습 직전 X" 로
+단일하게 고정할 수 없다 — 그 자체가 §13 누출 방지의 핵심이다.
+
+재현: `scripts/13_data_summary.py` 의 `cohort_matrix_stats()` (또는 아래 스니펫).
+
+```python
+from src.data.merge import load_cohort
+X = load_cohort().X          # (1631, 20132), int8, 0/1
+X.to_numpy().mean(), X.to_numpy().var()
+```
+
+---
+
 ## 2. OmicsGlobalSignatures.csv — 정답 label (y)
 
 row (raw) 3,044 / row (default, ModelID 유일) 1,968 / col 12
@@ -96,7 +141,7 @@ row 2,154 / col 49
 
 ---
 
-## 4. 병합 후 최종 코호트 (참고)
+## 4. 병합 후 최종 코호트 (요약)
 
 4개 파일을 ModelID 교집합으로 묶고 라벨 결측을 제거하면:
 
@@ -107,5 +152,6 @@ row 2,154 / col 49
 | col — label (y) | 3 (WGD, CIN, LoHFraction) |
 | 그룹 변수 | OncotreeLineage, 32종 |
 
+X 의 값 분포(dtype/min/max/mean/var)는 **1-b 절**에 상세히 정리했다.
 자세한 병합 과정은 `docs/depmap/mutation_matrix.md` 와
 `src/data/merge.py` 참고.
