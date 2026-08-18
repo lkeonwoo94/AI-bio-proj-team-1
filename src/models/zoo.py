@@ -103,6 +103,28 @@ def xgboost() -> ModelSpec:
                      importance="tree")
 
 
+def catboost() -> ModelSpec:
+    """XGBoost 와 동일 계열(gradient boosted trees) 비교용.
+
+    CatBoost 의 핵심 강점(ordered boosting, native categorical encoding)은
+    범주형 feature 에서 발휘된다. 본 데이터는 mutation 유무를 나타내는
+    0/1 binary feature 뿐이라 이 강점이 적용될 여지가 거의 없다.
+    따라서 XGBoost 와 성능이 비슷할 것이라는 가설을 검증하는 목적으로 추가한다.
+    """
+    from catboost import CatBoostClassifier
+
+    pipe = Pipeline([
+        _filter_step(),
+        ("clf", CatBoostClassifier(iterations=400, learning_rate=0.05,
+                                   subsample=0.8, rsm=0.5, loss_function="Logloss",
+                                   thread_count=-1, random_state=_seed(),
+                                   verbose=False, allow_writing_files=False)),
+    ])
+    return ModelSpec("catboost", lambda: pipe,
+                     {"clf__depth": [3, 6], "clf__l2_leaf_reg": [1.0, 10.0]},
+                     importance="tree")
+
+
 def multitask_ann() -> ModelSpec:
     """공유 hidden layer 뒤에 WGD/CIN/LOH 세 출력을 두는 구조 (README §11).
 
@@ -128,6 +150,7 @@ REGISTRY = {
     "elastic_net": elastic_net,
     "random_forest": random_forest,
     "xgboost": xgboost,
+    "catboost": catboost,
     "multitask_ann": multitask_ann,
 }
 

@@ -33,6 +33,7 @@ ROC-AUC 평균:
 | Elastic Net | 0.749 | 0.681 | 0.711 |
 | **Random Forest** | **0.765** | **0.734** | **0.730** |
 | XGBoost | 0.757 | 0.729 | 0.728 |
+| CatBoost | 0.762 | 0.711 | 0.717 |
 | Multi-task ANN | 0.704 | 0.671 | 0.667 |
 
 ### 읽을 점
@@ -41,8 +42,14 @@ ROC-AUC 평균:
   무작위(0.5)보다 확실히 높지만 임상적으로 쓸 수준은 아니다.
 * **WGD 가 가장 잘 예측된다.** PR-AUC 0.84 로 보이지만 WGD+ 가 65% 인
   다수 클래스라 기저선 자체가 높다. PR-AUC 를 표현형 간 비교에 쓰면 안 된다.
-* **비선형 모델이 일관되게 앞선다** (RF/XGB > 선형). 변이 간 interaction 이
-  일부 존재한다는 뜻이다.
+* **비선형 모델이 일관되게 앞선다** (RF/XGB/CatBoost > 선형). 변이 간
+  interaction 이 일부 존재한다는 뜻이다.
+* **CatBoost 는 XGBoost 와 거의 동일한 성능이다** (평균 ROC-AUC 0.730 vs
+  0.738). 사전 예상과 일치한다 — CatBoost 의 핵심 강점인 ordered boosting 과
+  native categorical encoding 은 다범주 categorical feature 에서 발휘되는데,
+  본 데이터는 mutation 유무를 나타내는 0/1 binary feature 뿐이라 그 강점이
+  적용될 여지가 거의 없다. 즉 "gradient boosted trees 계열이라면 구현체가
+  달라도 비슷한 상한에 수렴한다" 는 것을 보여주는 참고 결과다.
 * **Multi-task ANN 이 가장 낮다.** RQ4 에 대해서는 부정적 결과다 —
   표현형 간 상관이 높음에도 공유 표현이 개별 모델을 이기지 못했다.
   샘플 1,631 개에 feature 2,000 개 규모에서 MLP 가 불리한 탓일 수 있으므로

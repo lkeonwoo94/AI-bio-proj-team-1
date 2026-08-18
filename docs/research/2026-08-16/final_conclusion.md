@@ -41,13 +41,15 @@ Brier 도 0.20 대로 확률 보정이 좋지 않다. 즉 **신호는 분명히 
 | --- | ---: | ---: |
 | **Random Forest** | **0.743** | 0.019 |
 | XGBoost | 0.738 | 0.016 |
+| CatBoost | 0.730 | 0.028 |
 | Elastic Net | 0.714 | 0.034 |
 | Logistic | 0.693 | 0.027 |
 | Multi-task ANN | 0.681 | 0.020 |
 
-두 가지를 함께 읽어야 한다.
+세 가지를 함께 읽어야 한다.
 
-**비선형 모델이 선형 모델을 일관되게 앞선다** (RF/XGB 0.74 vs Logistic 0.69).
+**비선형 모델이 선형 모델을 일관되게 앞선다** (RF/XGB/CatBoost 0.73~0.74 vs
+Logistic 0.69).
 변이 간 interaction 이 실제로 존재한다는 뜻이다. 다만 그 이득은 0.05 정도로,
 "선형으로 충분하지 않다" 보다는 "약간의 비선형 구조가 있다" 에 가깝다.
 
@@ -196,18 +198,22 @@ loss of heterozygosity(LOH) 상태를 예측하였다. 세 표현형이 모두 �
 입력으로 사용하였으며, copy number, ploidy, gene expression, TMB 는 정답
 정보를 간접적으로 제공할 위험이 있어 주 모델의 입력에서 제외하였다.
 
-Logistic Regression, Elastic Net, Random Forest, XGBoost 및 multi-task ANN 을
-동일한 nested cross-validation(outer 5 × inner 5) 조건에서 비교하였다.
+Logistic Regression, Elastic Net, Random Forest, XGBoost, CatBoost 및
+multi-task ANN 을 동일한 nested cross-validation(outer 5 × inner 5) 조건에서
+비교하였다.
 희귀 변이 제거, CIN/LOH 이진화 threshold, hyperparameter, feature selection,
 분류 threshold 는 모두 각 training fold 내부에서만 결정하였고 outer test
 데이터는 어떤 단계에도 관여하지 않았다.
 
 **예측 성능.** Random Forest 가 세 표현형 모두에서 가장 높았으며
-ROC-AUC 는 WGD 0.765, CIN 0.734, LOH 0.730 이었다. 비선형 모델이 선형
-모델보다 일관되게 앞섰으나 그 차이는 0.05 내외였다. 세 표현형 간
-Spearman 상관이 0.62~0.77 로 낮지 않았음에도 multi-task ANN 은 개별 모델을
-넘어서지 못하여, 본 설정에서는 표현형 간 공유 표현의 이득이 관측되지
-않았다.
+ROC-AUC 는 WGD 0.765, CIN 0.734, LOH 0.730 이었다. 비선형 모델(RF/XGBoost/
+CatBoost, 평균 0.73~0.74)이 선형 모델(평균 0.69~0.71)보다 일관되게 앞섰으나
+그 차이는 0.05 내외였다. XGBoost 와 CatBoost 는 같은 gradient boosted
+trees 계열임에도 성능이 거의 동일했는데(0.738 vs 0.730), 이는 CatBoost 의
+강점인 categorical feature 처리가 0/1 binary feature 로만 구성된 본
+데이터에서는 발휘될 여지가 없었기 때문으로 보인다. 세 표현형 간 Spearman
+상관이 0.62~0.77 로 낮지 않았음에도 multi-task ANN 은 개별 모델을 넘어서지
+못하여, 본 설정에서는 표현형 간 공유 표현의 이득이 관측되지 않았다.
 
 **중요 변이.** 각 fold 의 training data 에서 feature selection 을 반복한
 결과 `TP53`(damaging), `ID3`, `BRAF`(hotspot), `CREBBP` 가 세 표현형

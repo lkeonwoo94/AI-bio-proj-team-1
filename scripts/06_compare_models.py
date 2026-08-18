@@ -19,10 +19,10 @@ from src.evaluation.metrics import METRIC_COLUMNS
 from src.viz.style import PHENOTYPE_COLORS, save, use_style
 
 TABLES = REPO_ROOT / "results" / "tables"
-MODEL_ORDER = ["logistic", "elastic_net", "random_forest", "xgboost", "multitask_ann"]
+MODEL_ORDER = ["logistic", "elastic_net", "random_forest", "xgboost", "catboost", "multitask_ann"]
 MODEL_LABEL = {
     "logistic": "Logistic", "elastic_net": "Elastic Net",
-    "random_forest": "Random Forest", "xgboost": "XGBoost",
+    "random_forest": "Random Forest", "xgboost": "XGBoost", "catboost": "CatBoost",
     "multitask_ann": "Multi-task ANN",
 }
 TARGET_LABEL = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
