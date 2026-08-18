@@ -252,6 +252,33 @@ CIN 6 종, LOH 3 종에서 무작위 수준(0.5) 미만이었다. 암종별 성�
 
 * 핵심 축: `TP53`, `ID3`, `BRAF`(hotspot), `CREBBP` (세 표현형 공통) 및
   표현형 특이 유전자 (`TERT`, `NF2`, `RB1`, `PIK3CA`, `PITX1`)
+  * `TP53` — 대표적 tumor suppressor. DNA 손상 시 세포주기를 멈추거나
+    세포사멸을 유도; 소실되면 손상된 세포가 그대로 분열해 유전체
+    불안정성이 누적된다.
+  * `ID3` — 전사인자 활성을 억제하는 조절인자(bHLH 계열 억제자); 세포
+    분화·증식 균형에 관여하며 여러 암에서 변이가 보고된다.
+  * `BRAF`(hotspot) — MAPK 신호전달의 kinase. V600E 등 특정 위치 변이로
+    항상 활성화되어 증식 신호를 지속적으로 내보낸다.
+  * `CREBBP` — 히스톤 아세틸화를 통한 전사 공활성인자(chromatin
+    remodeling); 소실 시 DNA 손상 반응·세포주기 조절 유전자의 발현이
+    흐트러진다.
+  * `TERT`(WGD 특이) — telomerase 역전사효소. 프로모터 hotspot 변이로
+    발현이 늘면 telomere 가 과도하게 유지되어 세포가 정상적으로 멈춰야
+    할 노화 신호를 우회한다 — WGD 세포의 생존과 관련이 깊다.
+  * `NF2`(WGD/LOH 특이) — Merlin 단백질을 만드는 tumor suppressor; 세포
+    접촉 억제와 증식 신호 조절에 관여하며 소실 시 염색체 분리 이상과도
+    연관된다.
+  * `RB1`(CIN/LOH 특이) — 세포주기 checkpoint(G1/S) 를 통제하는 대표적
+    tumor suppressor. 소실되면 분열 시점 통제가 풀려 염색체 불안정성과
+    직결된다.
+  * `PIK3CA`(CIN 특이, hotspot) — PI3K 신호전달의 촉매 subunit. hotspot
+    변이로 항상 활성화되어 증식·생존 신호를 과다하게 전달한다.
+  * `PITX1`(LOH 특이) — 발생 과정의 전사인자이자 tumor suppressor 로도
+    보고됨; RAS 신호 억제와 관련되어 소실 시 증식 억제가 풀린다.
+
+  (기능 설명은 일반적으로 알려진 역할을 요약한 것으로, 본 연구가 그
+  기전을 직접 검증하지는 않았다 — Day 11 반복 feature selection 으로
+  얻은 통계적 연관일 뿐이다.)
 * 적용 범위: DepMap 세포주 코호트 내부 검증 결과이며, 암종 간 일반화는
   확인되지 않음
 * 성능 수준: 판별력은 acceptable 구간(ROC-AUC 0.73–0.77)이나, WGD 유병률
