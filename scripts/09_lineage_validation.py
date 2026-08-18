@@ -30,7 +30,7 @@ TARGETS = ("wgd", "cin", "loh")
 TARGET_LABEL = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
 
 
-def plot_lineage_comparison(df: pd.DataFrame, lolo: pd.DataFrame) -> Path:
+def plot_lineage_comparison(df: pd.DataFrame, lolo: pd.DataFrame, model: str) -> Path:
     use_style()
     fig, axes = plt.subplots(1, 2, figsize=(14, 4.6),
                              gridspec_kw={"width_ratios": [1, 1.6]})
@@ -68,7 +68,7 @@ def plot_lineage_comparison(df: pd.DataFrame, lolo: pd.DataFrame) -> Path:
 
     fig.suptitle("Figure 6. Lineage 기반 검증", y=1.03, fontsize=12)
     fig.tight_layout()
-    return save(fig, "fig6_lineage_validation.png")
+    return save(fig, f"fig6_lineage_validation_{model}.png")
 
 
 def main() -> int:
@@ -129,9 +129,9 @@ def main() -> int:
     print("\n해석: 차이가 크게 음수면 해당 표현형의 mutation 신호는")
     print("      암종 의존적일 가능성이 있다 (README §25).")
 
-    cmp.to_csv(TABLES / "day13_lineage_comparison.csv")
-    lolo.to_csv(TABLES / "day13_lolo_by_lineage.csv", index=False)
-    path = plot_lineage_comparison(combined, lolo)
+    cmp.to_csv(TABLES / f"day13_lineage_comparison_{spec.name}.csv")
+    lolo.to_csv(TABLES / f"day13_lolo_by_lineage_{spec.name}.csv", index=False)
+    path = plot_lineage_comparison(combined, lolo, spec.name)
     print(f"\n저장: {path.name}, day13_*.csv")
     return 0
 

@@ -90,7 +90,7 @@ def q4_minimal_panel() -> None:
 
 def q5_lineage() -> None:
     print("⑤ 다른 cancer lineage 에서도 유지되었는가?")
-    cmp_ = _read("day13_lineage_comparison.csv")
+    cmp_ = _read("day13_lineage_comparison_elastic_net.csv")
     if cmp_ is None:
         print("   (09_lineage_validation.py 필요)\n")
         return
@@ -101,7 +101,7 @@ def q5_lineage() -> None:
         print(f"   {TARGET_LABEL.get(target, target)}: random {r['random']:.3f} -> "
               f"group {r['group']:.3f} ({delta:+.3f}) {verdict}")
 
-    lolo = _read("day13_lolo_by_lineage.csv")
+    lolo = _read("day13_lolo_by_lineage_elastic_net.csv")
     if lolo is not None:
         worst = lolo.groupby("held_out_lineage").roc_auc.mean().nsmallest(3)
         print("\n   LOLO 최저 암종: " + ", ".join(f"{k} {v:.3f}" for k, v in worst.items()))
