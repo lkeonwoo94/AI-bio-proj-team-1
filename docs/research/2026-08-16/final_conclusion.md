@@ -720,7 +720,7 @@ Figure 9(`fig9_regression_vs_classification.png`)에 네 조합을 나란히
 
 Related Work 절에서 확인한 두 방향을 실행 가능성 순으로 정리한다.
 
-### 1. Pathway 단위 mutation burden (즉시 착수 가능)
+### 1. ~~Pathway 단위 mutation burden~~ **[실행 완료 — 음성 결과]**
 
 **무엇을**: 20,132 개 유전자 컬럼을 MSigDB Hallmark 또는 KEGG 의 생물학적
 경로(DNA damage repair, cell cycle checkpoint, chromatin remodeling 등)로
@@ -746,6 +746,33 @@ sparsity 문제(hotspot 554개 중 10개 이상 세포주에서 관측되는 건
 **예상 소요**: 반나절 내외 — 기존 인프라(nested CV, 모델, 평가)를 그대로
 쓰고 feature 변환 단계만 추가하면 된다.
 
+**실행 결과**: MSigDB Hallmark 5개(DNA Repair, G2-M Checkpoint, E2F
+Targets, Mitotic Spindle, p53 Pathway) + KEGG 6개(DNA repair 세부 경로:
+BER/MMR/NER/HR/NHEJ/Fanconi anemia) — Enrichr 공개 미러에서 gene-set
+목록을 받아 hotspot/damaging 분리 시 22개 feature 로 접었다(대부분
+90%+ 매칭). 유전자 단위(필터 후 \~2,062개)와 같은 random 5-fold 조건에서
+비교했다(Figure 10).
+
+| 표현형 | 모델 | 유전자 단위 | Pathway(22개) | 차이 |
+| --- | --- | ---: | ---: | ---: |
+| WGD | Logistic | 0.723 | 0.674 | -0.049 |
+| CIN | Logistic | 0.672 | 0.643 | -0.029 |
+| LOH | Logistic | 0.683 | 0.648 | -0.035 |
+| WGD | Random Forest | 0.765 | 0.720 | -0.045 |
+| CIN | Random Forest | 0.734 | 0.691 | -0.043 |
+| LOH | Random Forest | 0.730 | 0.702 | -0.028 |
+
+**6개 조합 전부 pathway 쪽이 낮다(-0.028\~-0.049).** "sparsity 를 줄이면
+천장을 뚫는다"는 가설은 기각됐다. 원인은 짐작대로다 — TP53 이 유전자
+단위에서 압도적 1위 신호였는데(§26③), pathway 로 묶으면 "TP53 이 속한
+DNA Repair 경로 안 mutation 비율"이 되어 나머지 100여 개 약한 신호
+유전자와 평균 내지듯 희석된다. **정보 손실이 sparsity 완화 이득보다
+컸다.** 이 결과는 오히려 "핵심 신호가 소수의 특정 유전자에 집중되어
+있다"는 §26③·④의 기존 결론을 다른 각도에서 재확인해 준다.
+
+재현: `python scripts/19_pathway_representation.py`,
+`python scripts/20_plot_pathway_vs_gene.py`.
+
 ### 2. Mutation signature — 원시 MAF 파일 확보 (확장 과제)
 
 **무엇을**: DepMap 이 별도로 배포하는 `OmicsSomaticMutations.csv`
@@ -770,3 +797,48 @@ signature 추출(예: `SigProfilerExtractor`, `deconstructSigs`) 을 별도로
 **예상 소요**: 1번보다 크다 — 대용량 파일 처리와 signature 추출 도구 도입이
 새로 필요하다. **1번(pathway)을 먼저 시도해 sparsity 완화만으로 천장이
 뚫리는지 확인한 뒤, 뚫리지 않을 경우에 착수하는 순서를 권장한다.**
+
+### 3. 독립 코호트 검증 — 한계 6번(§26⑤, "이 결론의 한계") 후속
+
+**무엇을**: DepMap 세포주 내부 cross-validation 만으로는 "확정적인
+바이오마커"라 부를 수 없다는 지적(README §27)에 대해, 외부 데이터로
+재현성을 확인한다. 실행 가능성 순으로 세 옵션이 있다.
+
+**① DepMap 다른 릴리스 — 가장 쉬움, 다만 진짜 독립은 아님.** 지금 쓰는
+26Q1 대신 더 오래되거나 최신인 릴리스를 하나 더 받는다. 파일 형식이
+완전히 동일해 `configs/data.yaml` 의 `data_root` 만 바꾸면 되고, 코드
+수정이 거의 없다. 릴리스 사이에 새로 추가된 세포주로 지금 모델을
+평가하면 "시간적으로 미래 데이터에도 통하는가"를 볼 수 있다. 다만
+같은 파이프라인·상당수 겹치는 세포주라 진짜 독립 코호트는 아니다.
+
+**② TCGA — 진짜 독립 코호트, 작업량 있음.** 세포주가 아니라 환자
+종양 조직이라 도메인이 다르지만, 그래서 오히려 "진짜" 독립 검증이
+된다.
+
+* **Mutation**: [GDC MC3 MAF](https://gdc.cancer.gov/about-data/publications/mc3-2017)
+  또는 [cBioPortal](https://www.cbioportal.org) 에서 study 별 MAF 를
+  받는다. 유전자 심볼(HUGO)이 같아 hotspot/damaging 매핑이 비교적
+  수월하다.
+* **WGD/ploidy 라벨**: PanCanAtlas 의 ABSOLUTE 알고리즘 결과
+  ([Taylor et al. 2018, Cancer Cell](https://www.sciencedirect.com/science/article/pii/S1535610818301119))
+  가 ploidy·WGD count·purity 를 이미 계산해 supplementary table 로
+  공개돼 있다. CIN·LOH 에 대응하는 지표(aneuploidy score, LOH
+  fraction)도 같은 논문 계열에 있다.
+* **작업량**: (a) MAF 를 지금 쓰는 hotspot/damaging 이진 행렬 형식으로
+  재가공, (b) TCGA barcode ↔ WGD 라벨 매핑, (c) §9.2/§9.3 의 필터링
+  기준을 TCGA 에 맞게 재검토. 반나절\~하루 정도 코드 작업.
+* **장점**: 세포주(in vitro)에서 학습한 것이 실제 환자 종양(in vivo)
+  에도 통하는지 보이면 결론의 설득력이 크게 올라간다. TCGA 는 lineage
+  (암종)가 훨씬 다양해 "암종별 성능 편차" 절(§26⑤)도 더 넓은 범위에서
+  재검증할 수 있다.
+
+**③ Sanger Cell Model Passports / GDSC — 파이프라인 강건성 확인용.**
+DepMap 과 겹치는 세포주를 **독자적인 mutation calling 파이프라인**으로
+처리한 데이터다. 진짜 독립 코호트라기보다는 "같은 생물학적 샘플, 다른
+처리 과정"이라 **우리 결과가 DepMap 특정 변이 콜링 방식에 과적합된 게
+아닌지** 확인하는 용도에 가깝다. TCGA 만큼의 독립성은 없다.
+
+**권장 순서**: 시간이 없으면 ①로 재현성만 빠르게 확인하고, 제대로
+검증하려면 ②(TCGA)를 받는다. MC3 MAF 는 공개 API 로 승인 없이 바로
+받을 수 있고 용량도 크지 않다(수백 MB). ③은 ①②를 먼저 마친 뒤
+여유가 있을 때 시도한다.
