@@ -361,6 +361,12 @@ MSI·gene expression 을 포함한 확장 분석이 후속 과제로 남는다.
    해석해야 한다.
 5. ~~Day 12 패널 분석은 Elastic Net 기준이다.~~ **[해소] Random Forest 로
    재검증 완료.** 방향은 같고 안정성은 오히려 RF 가 더 좋다 — 아래 참조.
+6. **CIN 을 Elastic Net 으로 볼 때는 이진화 손실이 있다.** 회귀로
+   재검증한 결과 RF/CIN, RF/LOH, EN/LOH 세 조합은 이진화 손실이
+   거의 없었지만(±0.02), EN/CIN 만 회귀 rho 가 분류(환산)보다
+   +0.091 높았다. §26③·④ 의 CIN 관련 feature selection·패널 결과
+   (모두 Elastic Net 기준)는 이 손실을 어느 정도 안고 있을 수 있다 —
+   "CIN 이진화로 정보를 버렸는가" 절 참조.
 
 ---
 
@@ -533,7 +539,7 @@ Fibroblast(TP53 변이율 10%, AUC 0.85)와 Thyroid(70%, AUC 0.88)가 거의
 항목만 raw p<0.05 다. **다만 이걸 "발견"으로 읽으면 안 된다.** 이
 표만으로 18번, Figure 8 재현까지 포함하면 30번 가까운 검정을 했고
 Bonferroni 보정 기준(α=0.05/30≈0.0017)에는 두 값 다 한참 못 미친다.
-α=0.05 에서 30번 검정하면 우연히 1~2 번은 p<0.05 가 나오는 게
+α=0.05 에서 30번 검정하면 우연히 1\~2 번은 p<0.05 가 나오는 게
 정상이므로, 이 결과는 그 기대치 안에 있다.
 
 다만 완전히 무시하기도 애매한 구석이 있다. mutation burden 가설은
@@ -564,6 +570,69 @@ Figure 8 은 6개 조합 전부 저장했다
 `python scripts/11_lineage_specific.py`,
 `python scripts/15_lineage_hypothesis_test.py --model {elastic_net,random_forest} --target {wgd,cin,loh}`,
 `python scripts/16_plot_lineage_hypotheses.py --model {elastic_net,random_forest} --target {wgd,cin,loh}`.
+
+---
+
+## CIN/LOH 이진화가 정보를 버리는가 — 회귀로 직접 검증
+
+"보완해야 할 점" 5번(CIN/LOH 를 high/low 로 나누면서 정보가 손실됨,
+회귀로 실제 연속값을 예측해 분류 결과와 비교 필요)에 대한 실험이다.
+
+### 무엇을 했는가
+
+같은 mutation feature 로 CIN·LoHFraction 의 **연속값을 직접 회귀
+예측**했다(Elastic Net regression, Random Forest regressor — 기존
+분류 모델과 계열을 맞춤). Pipeline 구조(희귀 변이 필터, outer 5-fold)는
+분류와 동일하게 유지했다. 다만 지금까지의 lineage 실험과 달리 random
+split 만 썼다 — 이진화 손실 여부를 확인하는 것이 목적이라 검증 방식을
+동시에 바꾸지 않았다.
+
+### 결과
+
+| 표현형 | 모델 | 분류 ROC-AUC | 회귀 R² | 회귀 Spearman rho |
+| --- | --- | ---: | ---: | ---: |
+| CIN | Elastic Net | 0.681 | 0.227 | 0.453 |
+| CIN | Random Forest | 0.734 | 0.267 | 0.488 |
+| LoHFraction | Elastic Net | 0.711 | 0.155 | 0.431 |
+| LoHFraction | Random Forest | 0.730 | 0.170 | 0.451 |
+
+ROC-AUC 와 Spearman rho 는 척도가 달라 직접 등치할 수 없다. 방향을
+가늠하기 위해 AUC 를 `2×(AUC-0.5)` 로 rho 와 같은 0\~1 스케일에
+**근사 환산**해서 비교했다(엄밀한 통계적 등가는 아니다, Figure 9).
+
+| 표현형 | 모델 | 분류(환산) | 회귀 rho | 차이 |
+| --- | --- | ---: | ---: | ---: |
+| CIN | Elastic Net | 0.362 | 0.453 | **+0.091** |
+| CIN | Random Forest | 0.468 | 0.488 | +0.020 |
+| LoHFraction | Elastic Net | 0.422 | 0.431 | +0.009 |
+| LoHFraction | Random Forest | 0.460 | 0.451 | −0.009 |
+
+### 해석
+
+**세 조합은 거의 차이가 없고(±0.02), CIN + Elastic Net 한 조합만
+회귀가 뚜렷이 높다(+0.091).** 즉:
+
+* Random Forest 는 CIN·LOH 어느 쪽에서도 이진화로 정보를 거의
+  잃지 않는다 — 비선형 모델이 중앙값 근처의 애매한 경계를 이미 어느
+  정도 잘 처리하고 있었다는 뜻으로 읽을 수 있다.
+* LoHFraction 은 모델과 무관하게 이진화 손실이 거의 없다.
+* **CIN 을 선형 모델(Elastic Net)로 볼 때만 이진화가 신호를 깎아
+  먹는다.** CIN 분포가 이봉형(Figure 2)이라는 점과 맞물려 볼 수 있다
+  — 중앙값 근처에 세포주가 상대적으로 적어 median split 자체는
+  덜 위험하지만, 선형 모델이 그 비선형적인 분포 형태를 이진화 이후에는
+  더 못 살리는 것으로 보인다.
+
+**결론을 바꾸지는 않는다.** §26①의 "제한적으로 가능하다"는 판단은
+회귀로 봐도 유지된다(R² 0.15\~0.27 은 여전히 중간 정도의 설명력이다).
+다만 **Elastic Net 기반 CIN 패널(§26③·④)은 이진화 손실을 어느 정도
+안고 있을 수 있다**는 점을 한계로 추가한다 — 향후 회귀 기반 feature
+selection 으로 CIN 패널을 다시 뽑아보는 것이 자연스러운 후속 과제다.
+
+Figure 9(`fig9_regression_vs_classification.png`)에 네 조합을 나란히
+그렸다.
+
+재현: `python scripts/17_regression_vs_classification.py`,
+`python scripts/18_plot_regression_vs_classification.py`.
 
 ---
 

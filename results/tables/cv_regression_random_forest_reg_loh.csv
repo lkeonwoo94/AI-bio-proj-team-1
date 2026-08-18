@@ -1,0 +1,6 @@
+r2,spearman_rho,rmse,mae,n_test,fold,model,target,best_params,n_train,n_features_kept
+0.17329209295452708,0.47396317182414277,0.16003655866600233,0.12481395488632285,327,0,random_forest_reg,loh,"{'clf__max_depth': 8, 'clf__min_samples_leaf': 5}",1304,1316
+0.2089433367662521,0.46515338285225866,0.1381025838781259,0.11061165303810053,326,1,random_forest_reg,loh,"{'clf__max_depth': 8, 'clf__min_samples_leaf': 5}",1305,1408
+0.17284050849262922,0.44613692329654736,0.1363551251263684,0.10918835398925364,326,2,random_forest_reg,loh,"{'clf__max_depth': None, 'clf__min_samples_leaf': 5}",1305,1468
+0.17138757758033574,0.46597713079804504,0.14682188105175875,0.11909713246933797,326,3,random_forest_reg,loh,"{'clf__max_depth': 8, 'clf__min_samples_leaf': 5}",1305,1164
+0.12340454694774672,0.40181507695986424,0.1555708276004968,0.11864852992165151,326,4,random_forest_reg,loh,"{'clf__max_depth': 8, 'clf__min_samples_leaf': 5}",1305,1466
