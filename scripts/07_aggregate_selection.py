@@ -21,6 +21,11 @@ from src.viz.style import PHENOTYPE_COLORS, save, use_style
 TABLES = REPO_ROOT / "results" / "tables"
 TARGETS = ("wgd", "cin", "loh")
 TARGET_LABEL = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
+MODEL_LABEL = {
+    "logistic": "Logistic", "elastic_net": "Elastic Net",
+    "random_forest": "Random Forest", "xgboost": "XGBoost", "catboost": "CatBoost",
+    "multitask_ann": "Multi-task ANN",
+}
 
 
 def short(feature: str, width: int = 22) -> str:
@@ -48,7 +53,8 @@ def plot_stability(aggs: dict[str, pd.DataFrame], model: str, top_n: int = 15) -
         ax.set_title(f"{TARGET_LABEL[target]} 상위 {top_n}개")
         ax.tick_params(axis="y", labelsize=8)
 
-    fig.suptitle("Figure 4. 반복 feature selection 안정성 (Elastic Net, outer 5-fold)",
+    fig.suptitle(f"Figure 4. 반복 feature selection 안정성 "
+                 f"({MODEL_LABEL.get(model, model)}, outer 5-fold)",
                  y=1.02, fontsize=12)
     fig.tight_layout()
     return save(fig, f"fig4_selection_stability_{model}.png")
