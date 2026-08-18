@@ -383,10 +383,25 @@ MSI·gene expression 을 포함한 확장 분석이 후속 과제로 남는다.
    유무(0/1)만 쓰는 본 연구는 ROC-AUC 0.73~0.77 이다. 입력이 풍부해질수록
    성능이 올라가는 자연스러운 흐름이며, 본 연구의 결과가 mutation-only
    라는 제약 안에서 특별히 낮은 편은 아니라는 뜻이다.
-2. 선행 연구들은 개별 유전자 컬럼이 아니라 **mutation signature(trinucleotide
-   context)** 나 **pathway 단위 mutation burden** 을 입력으로 쓰는 경우가
-   많다. 이는 "알고리즘을 바꾸는" 것과는 다른 축의 개선이며, 본 연구가
+2. 선행 연구들은 개별 유전자 컬럼이 아니라 **더 뭉뚱그린 단위**를 입력으로
+   쓰는 경우가 많다. 이는 알고리즘을 바꾸는 것도, 새 데이터원(CNV·발현 등)을
+   추가하는 것도 아니다 — **같은 mutation 정보를 사람이 아는 생물학적
+   그룹으로 미리 재집계**하는 feature engineering 이다. 본 연구가
    §26②·Figure 3 에서 확인한 "모델을 바꿔도 같은 신호만 본다"(RF/XGBoost/
-   CatBoost feature importance 상관 0.56~0.61)는 결과와 상충하지 않는다.
-   오히려 sparsity 를 줄이는 representation 변경이 다음으로 시도해볼
-   방향임을 시사한다.
+   CatBoost feature importance 상관 0.56~0.61)는 결과와 상충하지 않는다 —
+   모델이 아니라 입력의 재집계 단위를 바꾸는 시도이기 때문이다.
+
+   구체적으로는 두 방향이 있는데 실행 가능성이 다르다.
+   * **Pathway 단위 mutation burden** — 지금 가진 이진 행렬(유전자×세포주)
+     그대로, 외부 gene-set 주석(예: MSigDB, DNA repair/cell cycle
+     카테고리)만 있으면 바로 만들 수 있다. 20,132 개 유전자를 수십 개
+     pathway 로 묶어 sparsity 를 줄이는 방식이며 새 데이터 다운로드가
+     필요 없다.
+   * **Mutation signature(trinucleotide context)** — 애초에 실행 불가능한
+     것으로 정정한다. 본 연구가 받은 `OmicsSomaticMutationsMatrix{Hotspot,
+     Damaging}.csv` 는 이미 유전자×세포주 이진 행렬로 집계된 파일이라
+     염색체·위치·염기(Chrom/Pos/Ref/Alt) 정보가 사라져 있다. trinucleotide
+     context 를 계산하려면 DepMap 이 별도로 배포하는 원시 MAF 파일
+     (`OmicsSomaticMutations.csv`, `OmicsSomaticMutationsMAF.maf`)을 추가로
+     받아야 하며, 이는 지금 파이프라인에 바로 끼워 넣을 수 있는 재집계가
+     아니라 **별도 데이터 확보가 선행되어야 하는 확장 과제**다.
