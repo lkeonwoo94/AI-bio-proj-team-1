@@ -12,6 +12,21 @@
 
 ## 1. Mutation matrix — 입력 feature (X)
 
+**hotspot** — 여러 암에서 반복적으로 관측되는, 위치가 고정된 특정 변이
+(예: `KRAS` 12번 코돈, `BRAF` V600E). 대체로 단백질 기능을 **활성화**시키는
+쪽으로 작용해 oncogene 에서 흔히 발견된다. 유전자당 특정 위치 하나만
+집계하므로 유전자 수가 적다(554개).
+
+**damaging** — 위치와 무관하게 단백질 기능을 **손상**시킬 것으로 예측되는
+변이 전반(nonsense, frameshift 등 loss-of-function 계열). 유전자 전체에서
+발생 가능하므로 범위가 훨씬 넓고, tumor suppressor 에서 흔히 발견된다
+(19,578개).
+
+즉 hotspot 은 "기능 획득(gain-of-function)", damaging 은 "기능 손실
+(loss-of-function)" 쪽 신호에 가깝다는 것이 대략적인 구분이며, 본 연구가
+둘을 별도 feature 로 유지하는 이유이기도 하다(§9.2, `merge_rule:
+keep_separate`).
+
 | 파일 | row (raw) | row (default) | col (=feature 차원) | dtype |
 | --- | ---: | ---: | ---: | --- |
 | `OmicsSomaticMutationsMatrixHotspot.csv` | 3,044 | 1,968 | 554 | int (변이 개수) |
