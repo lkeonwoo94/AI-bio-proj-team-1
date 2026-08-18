@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -26,15 +27,19 @@ from src.viz.style import PHENOTYPE_COLORS, save, use_style
 
 TABLES = REPO_ROOT / "results" / "tables"
 COLOR = PHENOTYPE_COLORS["wgd"]
+MODEL_LABEL = {
+    "logistic": "Logistic", "elastic_net": "Elastic Net",
+    "random_forest": "Random Forest", "xgboost": "XGBoost", "catboost": "CatBoost",
+}
 
 
-def build_data() -> pd.DataFrame:
-    lolo = pd.read_csv(TABLES / "cv_lolo_elastic_net_wgd.csv")[
+def build_data(model: str) -> pd.DataFrame:
+    lolo = pd.read_csv(TABLES / f"cv_lolo_{model}_wgd.csv")[
         ["held_out_lineage", "roc_auc", "n_test", "positive_rate"]
     ].rename(columns={"held_out_lineage": "lineage", "n_test": "n"})
-    lolo["base_rate_dev"] = (lolo.positive_rate - 0.652).abs()
+    lolo["base_rate_dev"] = (lolo.positive_rate - 0.652).abs()  # 전체 코호트 WGD+ 비율
 
-    extra = pd.read_csv(TABLES / "day15_lineage_hypothesis_features.csv")[
+    extra = pd.read_csv(TABLES / f"day15_lineage_hypothesis_features_{model}.csv")[
         ["lineage", "tp53_rate", "mean_burden", "tp53_extremity"]
     ]
     return lolo.merge(extra, on="lineage")
@@ -66,8 +71,12 @@ def panel(ax, df: pd.DataFrame, x_col: str, title: str, xlabel: str, n_label: in
 
 
 def main() -> int:
+    p = argparse.ArgumentParser()
+    p.add_argument("--model", default="elastic_net")
+    args = p.parse_args()
+
     use_style()
-    df = build_data()
+    df = build_data(args.model)
 
     fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     specs = [
@@ -81,7 +90,7 @@ def main() -> int:
     ]
     for ax, (col, title, xlabel) in zip(axes.flat, specs):
         panel(ax, df, col, title, xlabel)
-    axes.flat[-1].set_visible(False)
+    axes.flat[-1].axis("off")  # set_visible(False) 는 이후 text() 까지 숨겨버려서 axis(off) 로 대체
     axes.flat[-1].text(
         0.02, 0.5,
         "점 1개 = lineage(암종) 1개, 총 24개.\n"
@@ -93,11 +102,12 @@ def main() -> int:
     )
 
     fig.suptitle(
-        "Figure 8. 암종별 LOLO 성능 편차 — 원인 가설 다섯 가지 (전부 기각, n=24 lineage)",
+        f"Figure 8. 암종별 LOLO 성능 편차 — 원인 가설 다섯 가지 "
+        f"({MODEL_LABEL.get(args.model, args.model)}, n=24 lineage)",
         y=1.01, fontsize=12,
     )
     fig.tight_layout()
-    path = save(fig, "fig8_lineage_hypotheses.png")
+    path = save(fig, f"fig8_lineage_hypotheses_{args.model}.png")
 
     print(f"저장: {path.name}")
     for col, title, _ in specs:

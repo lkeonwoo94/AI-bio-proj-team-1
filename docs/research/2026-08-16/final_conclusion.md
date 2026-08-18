@@ -486,6 +486,13 @@ GroupKFold 는 −0.046\~−0.069, §26⑤). Leave-One-Lineage-Out(LOLO,
 24종)에서는 암종별 ROC-AUC 가 0.314\~0.882 로 매우 크게 갈린다 — WGD
 기준 3종, CIN 기준 6종이 무작위 수준(0.5) 미만이다.
 
+**Random Forest 로도 같은 진단이 나온다.** GroupKFold 감소폭은 WGD
+−0.065, CIN −0.056, LOH −0.047 로 Elastic Net(−0.062/−0.046/−0.069)과
+방향·크기가 비슷하다. RF 의 LOLO 최저 암종도 겹친다 — Eye(WGD 0.188,
+LOH 0.129), Lung(WGD 0.443), Pancreas(WGD 0.437) 로 Elastic Net 이
+지목한 Eye·Lung·Cervix·Pancreas 와 대체로 일치한다. 즉 편차 자체는
+모델을 가리지 않는 현상이다.
+
 ### 2단계 — "해당 암종만으로 다시 학습해도 개선 안 됨" 확인
 
 세포주 60개 이상 9종에서 그 암종 데이터만으로 학습·평가한 결과(암종
@@ -513,6 +520,21 @@ Fibroblast(TP53 변이율 10%, AUC 0.85)와 Thyroid(70%, AUC 0.88)가 거의
 반대되는 TP53 변이율에서 똑같이 높은 성능을 보이는 것처럼, 어느 변수를
 기준으로 봐도 성공/실패 사례가 뒤섞여 나타난다(Figure 8).
 
+**Random Forest 로도 재검정한 결과 결론은 바뀌지 않는다.**
+
+| 가설 | EN rho (p) | RF rho (p) |
+| --- | --- | --- |
+| TP53 변이율 | +0.148 (0.491) | +0.249 (0.241) |
+| mutation burden | −0.201 (0.347) | −0.024 (0.910) |
+| TP53 변이율의 극단성 | +0.216 (0.311) | +0.289 (0.171) |
+
+RF 에서 rho 절댓값이 약간 커진 항목(③⑤)도 있지만 여전히 유의하지
+않다(p>0.17). 모델을 바꿔도 다섯 가설이 전부 기각된다는 점은 그대로다
+— Figure 8 을 `fig8_lineage_hypotheses_elastic_net.png` 와
+`fig8_lineage_hypotheses_random_forest.png` 두 버전으로 남겨 비교할 수
+있게 했다.
+
+
 ### 결론 — 원인 규명은 못 했지만 범위는 좁혔다
 
 **"어떤 암종에서 mutation 패턴이 유효한지"는 예측할 수 없다는 것이
@@ -525,10 +547,10 @@ Fibroblast(TP53 변이율 10%, AUC 0.85)와 Thyroid(70%, AUC 0.88)가 거의
 더 많은 세포주 확보나 lineage 특이적 상호작용을 볼 수 있는 다른 종류의
 분석이 필요하며, 본 연구의 데이터 범위 안에서는 답하기 어렵다.
 
-재현: `python scripts/09_lineage_validation.py`,
+재현: `python scripts/09_lineage_validation.py --model {elastic_net,random_forest}`,
 `python scripts/11_lineage_specific.py`,
-`python scripts/15_lineage_hypothesis_test.py`,
-`python scripts/16_plot_lineage_hypotheses.py`.
+`python scripts/15_lineage_hypothesis_test.py --model {elastic_net,random_forest}`,
+`python scripts/16_plot_lineage_hypotheses.py --model {elastic_net,random_forest}`.
 
 ---
 

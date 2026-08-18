@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -29,9 +30,9 @@ TABLES = REPO_ROOT / "results" / "tables"
 TP53_COLS = ["TP53 (7157)_hotspot", "TP53 (7157)_damaging"]
 
 
-def build_lineage_features(target: str = "wgd") -> pd.DataFrame:
+def build_lineage_features(target: str = "wgd", model: str = "elastic_net") -> pd.DataFrame:
     cohort = load_cohort()
-    lolo = pd.read_csv(TABLES / f"cv_lolo_elastic_net_{target}.csv")
+    lolo = pd.read_csv(TABLES / f"cv_lolo_{model}_{target}.csv")
 
     rows = []
     for lineage in lolo.held_out_lineage:
@@ -51,7 +52,11 @@ def build_lineage_features(target: str = "wgd") -> pd.DataFrame:
 
 
 def main() -> int:
-    feat = build_lineage_features("wgd")
+    p = argparse.ArgumentParser()
+    p.add_argument("--model", default="elastic_net")
+    args = p.parse_args()
+
+    feat = build_lineage_features("wgd", args.model)
 
     tests = {
         "TP53 변이율": feat.tp53_rate,
@@ -59,7 +64,7 @@ def main() -> int:
         "TP53 변이율의 극단성(0/1에 가까움)": feat.tp53_extremity,
     }
 
-    print(f"[WGD LOLO, {len(feat)}개 lineage]\n")
+    print(f"[{args.model} / WGD LOLO, {len(feat)}개 lineage]\n")
     for name, series in tests.items():
         r = spearmanr(series, feat.roc_auc)
         verdict = "유의함" if r.pvalue < 0.05 else "기각 (유의하지 않음)"
@@ -68,8 +73,9 @@ def main() -> int:
     print(f"\n검정력 참고: lineage {len(feat)}개로는 |rho|>0.4 정도는 되어야")
     print("  p<0.05 를 얻을 수 있다 — 통계적 검정력 자체가 낮다.")
 
-    feat.to_csv(TABLES / "day15_lineage_hypothesis_features.csv", index=False)
-    print(f"\n저장: day15_lineage_hypothesis_features.csv")
+    out = TABLES / f"day15_lineage_hypothesis_features_{args.model}.csv"
+    feat.to_csv(out, index=False)
+    print(f"\n저장: {out.name}")
     return 0
 
 
