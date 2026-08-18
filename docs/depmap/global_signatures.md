@@ -23,10 +23,10 @@ sig = sig[sig.IsDefaultEntryForModel == "Yes"]   # 1,968 행, ModelID 유일
 | `IsDefaultEntryForModel` | 세포주당 대표 프로파일 | `"Yes"` 로 필터 |
 | `IsDefaultEntryForMC` | 조건당 대표 프로파일 | 사용 안 함 |
 | **`WGD`** | **RQ1 label** | 0 / 1 binary |
-| **`CIN`** | **RQ2 label** | 연속형 0 ~ 0.859 |
-| **`LoHFraction`** | **RQ3 label** | 연속형 0 ~ 0.930 |
-| `Ploidy` | 사용 안 함 | 1.67 ~ 5.00. WGD 와 직결되어 feature 제외 (README §7) |
-| `Aneuploidy` | 사용 안 함 | 0 ~ 39 정수. arm-level 이상 개수 |
+| **`CIN`** | **RQ2 label** | 연속형 0 \~ 0.859 |
+| **`LoHFraction`** | **RQ3 label** | 연속형 0 \~ 0.930 |
+| `Ploidy` | 사용 안 함 | 1.67 \~ 5.00. WGD 와 직결되어 feature 제외 (README §7) |
+| `Aneuploidy` | 사용 안 함 | 0 \~ 39 정수. arm-level 이상 개수 |
 | `MSIScore` | 사용 안 함 | 확장 분석 후보 (README §23 Nice-to-have) |
 
 ## 값 분포 (default 프로파일 기준)
