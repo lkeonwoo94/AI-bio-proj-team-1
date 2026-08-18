@@ -405,3 +405,60 @@ MSI·gene expression 을 포함한 확장 분석이 후속 과제로 남는다.
      (`OmicsSomaticMutations.csv`, `OmicsSomaticMutationsMAF.maf`)을 추가로
      받아야 하며, 이는 지금 파이프라인에 바로 끼워 넣을 수 있는 재집계가
      아니라 **별도 데이터 확보가 선행되어야 하는 확장 과제**다.
+
+---
+
+## Future Work
+
+Related Work 절에서 확인한 두 방향을 실행 가능성 순으로 정리한다.
+
+### 1. Pathway 단위 mutation burden (즉시 착수 가능)
+
+**무엇을**: 20,132 개 유전자 컬럼을 MSigDB Hallmark 또는 KEGG 의 생물학적
+경로(DNA damage repair, cell cycle checkpoint, chromatin remodeling 등)로
+묶어, "이 세포주가 이 경로 유전자 중 몇 개에 damaging/hotspot mutation 을
+가졌는가" 를 새 feature 로 만든다.
+
+**왜 유효한가**: 지금 가진 데이터(`cohort.X`)만으로 되는 재집계다. gene-set
+주석은 표현형과 무관한 정적 메타데이터라 새로 받아도 §13 누출 위험이 없다.
+sparsity 문제(hotspot 554개 중 10개 이상 세포주에서 관측되는 건 36개뿐)를
+정면으로 줄이는 접근이라, 지금까지 모델을 5개나 바꿔도 0.73~0.77 에서
+움직이지 않은 천장(§26②, RF/XGBoost/CatBoost feature importance 상관
+0.56~0.61)을 뚫을 실질적 후보다.
+
+**절차**:
+1. MSigDB(C2 curated 또는 Hallmark) 에서 DNA repair·cell cycle·chromatin
+   관련 gene set 목록을 받는다.
+2. `src/features/` 에 `pathway_aggregate.py` 를 추가해 유전자 컬럼을
+   pathway 컬럼으로 접는 transformer 를 만든다 (`RareMutationFilter` 와
+   같은 자리, Pipeline 안에 넣어 fold 마다 일관되게 적용).
+3. 기존 `05_run_cv.py` 파이프라인을 그대로 재사용해 pathway 표현과
+   유전자 표현의 성능을 같은 nested CV 조건에서 비교한다.
+
+**예상 소요**: 반나절 내외 — 기존 인프라(nested CV, 모델, 평가)를 그대로
+쓰고 feature 변환 단계만 추가하면 된다.
+
+### 2. Mutation signature — 원시 MAF 파일 확보 (확장 과제)
+
+**무엇을**: DepMap 이 별도로 배포하는 `OmicsSomaticMutations.csv`
+(MAF-like, `Chrom`/`Pos`/`Ref`/`Alt` 컬럼 포함) 또는
+`OmicsSomaticMutationsMAF.maf` 를 받아 trinucleotide context 를 계산하고,
+COSMIC SBS mutational signature exposure 를 세포주별 feature 로 쓴다.
+
+**왜 다른 과제로 분리했는가**: 지금 가진 `OmicsSomaticMutationsMatrix
+{Hotspot,Damaging}.csv` 는 이미 유전자×세포주 이진 행렬로 집계되어 위치·
+염기 정보가 사라진 상태라, 이 접근은 기존 파이프라인에 재집계 단계 하나를
+추가하는 정도로 끝나지 않는다 — **원시 파일을 새로 받고, 대용량 MAF 파싱과
+signature 추출(예: `SigProfilerExtractor`, `deconstructSigs`) 을 별도로
+구축**해야 한다.
+
+**절차**:
+1. `OmicsSomaticMutations.csv` 다운로드 (용량이 커서 `data/depmap/README.md`
+   에 안내만 추가하고 git 추적은 하지 않는다 — 기존 데이터 관리 방식과 동일).
+2. 세포주별로 SBS signature exposure 를 계산해 새 feature 행렬을 만든다.
+3. 1번(pathway)과 마찬가지로 기존 nested CV 파이프라인에 대체 입력으로
+   붙여 성능을 비교한다.
+
+**예상 소요**: 1번보다 크다 — 대용량 파일 처리와 signature 추출 도구 도입이
+새로 필요하다. **1번(pathway)을 먼저 시도해 sparsity 완화만으로 천장이
+뚫리는지 확인한 뒤, 뚫리지 않을 경우에 착수하는 순서를 권장한다.**
