@@ -506,7 +506,7 @@ mutation-only 로 학습 가능한 신호가 없는 것"** 에 가깝다는 뜻�
 ### 3단계 — 왜 어떤 암종엔 신호가 없는지, 다섯 가설 검정
 
 "어떤 암종에서 mutation 패턴이 유효한가"를 직접 설명해 줄 후보 변수를
-다섯 개 시험했다. 전부 기각됐다(Figure 8, §26⑤).
+다섯 개 시험했다. WGD 기준으로는 전부 기각됐다(Figure 8, §26⑤).
 
 | 가설 | Spearman rho | p |
 | --- | ---: | ---: |
@@ -520,19 +520,32 @@ Fibroblast(TP53 변이율 10%, AUC 0.85)와 Thyroid(70%, AUC 0.88)가 거의
 반대되는 TP53 변이율에서 똑같이 높은 성능을 보이는 것처럼, 어느 변수를
 기준으로 봐도 성공/실패 사례가 뒤섞여 나타난다(Figure 8).
 
-**Random Forest 로도 재검정한 결과 결론은 바뀌지 않는다.**
+**Random Forest, 그리고 CIN·LOH 까지 넓혀 총 6개 조합(2모델×3표현형)
+으로 재검정했다.** ③④⑤ 세 가설의 Spearman rho(p):
 
-| 가설 | EN rho (p) | RF rho (p) |
-| --- | --- | --- |
-| TP53 변이율 | +0.148 (0.491) | +0.249 (0.241) |
-| mutation burden | −0.201 (0.347) | −0.024 (0.910) |
-| TP53 변이율의 극단성 | +0.216 (0.311) | +0.289 (0.171) |
+| 가설 | EN/WGD | EN/CIN | EN/LOH | RF/WGD | RF/CIN | RF/LOH |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| TP53 변이율 | +0.148 (.491) | −0.201 (.347) | +0.177 (.407) | +0.249 (.241) | +0.014 (.949) | +0.107 (.619) |
+| mutation burden | −0.201 (.347) | +0.143 (.504) | +0.390 (.059) | −0.024 (.910) | +0.190 (.375) | **+0.416 (.043)** |
+| TP53 변이율 극단성 | +0.216 (.311) | +0.324 (.123) | +0.258 (.223) | +0.289 (.171) | +0.301 (.153) | **+0.406 (.049)** |
 
-RF 에서 rho 절댓값이 약간 커진 항목(③⑤)도 있지만 여전히 유의하지
-않다(p>0.17). 모델을 바꿔도 다섯 가설이 전부 기각된다는 점은 그대로다
-— Figure 8 을 `fig8_lineage_hypotheses_elastic_net.png` 와
-`fig8_lineage_hypotheses_random_forest.png` 두 버전으로 남겨 비교할 수
-있게 했다.
+18번 검정 중 16번은 기존과 같이 기각이다. 굵게 표시한 RF/LOH 의 두
+항목만 raw p<0.05 다. **다만 이걸 "발견"으로 읽으면 안 된다.** 이
+표만으로 18번, Figure 8 재현까지 포함하면 30번 가까운 검정을 했고
+Bonferroni 보정 기준(α=0.05/30≈0.0017)에는 두 값 다 한참 못 미친다.
+α=0.05 에서 30번 검정하면 우연히 1~2 번은 p<0.05 가 나오는 게
+정상이므로, 이 결과는 그 기대치 안에 있다.
+
+다만 완전히 무시하기도 애매한 구석이 있다. mutation burden 가설은
+LOH 에서 EN(+0.390, p=.059)과 RF(+0.416, p=.043)가 **같은 방향, 비슷한
+크기로 나온다** — 다른 조합들처럼 모델 바꾸면 부호까지 흔들리는 것과는
+다르다. 이게 진짜 신호인지, 아니면 LOH 라벨이 median split 이라 CIN
+보다 클래스 균형이 더 타이트해서 생기는 통계적 우연인지는 지금 데이터
+(lineage 24개)로 구분할 수 없다. **결론을 바꾸지 않되, LOH 의 mutation
+burden 관련성은 추가 확인이 필요한 약한 신호로 따로 기록해 둔다.**
+
+Figure 8 은 6개 조합 전부 저장했다
+(`fig8_lineage_hypotheses_{elastic_net,random_forest}_{wgd,cin,loh}.png`).
 
 
 ### 결론 — 원인 규명은 못 했지만 범위는 좁혔다
@@ -549,8 +562,8 @@ RF 에서 rho 절댓값이 약간 커진 항목(③⑤)도 있지만 여전히 �
 
 재현: `python scripts/09_lineage_validation.py --model {elastic_net,random_forest}`,
 `python scripts/11_lineage_specific.py`,
-`python scripts/15_lineage_hypothesis_test.py --model {elastic_net,random_forest}`,
-`python scripts/16_plot_lineage_hypotheses.py --model {elastic_net,random_forest}`.
+`python scripts/15_lineage_hypothesis_test.py --model {elastic_net,random_forest} --target {wgd,cin,loh}`,
+`python scripts/16_plot_lineage_hypotheses.py --model {elastic_net,random_forest} --target {wgd,cin,loh}`.
 
 ---
 

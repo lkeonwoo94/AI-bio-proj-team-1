@@ -26,33 +26,40 @@ from src.config import REPO_ROOT
 from src.viz.style import PHENOTYPE_COLORS, save, use_style
 
 TABLES = REPO_ROOT / "results" / "tables"
-COLOR = PHENOTYPE_COLORS["wgd"]
+TARGET_LABEL = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
 MODEL_LABEL = {
     "logistic": "Logistic", "elastic_net": "Elastic Net",
     "random_forest": "Random Forest", "xgboost": "XGBoost", "catboost": "CatBoost",
 }
 
 
-def build_data(model: str) -> pd.DataFrame:
-    lolo = pd.read_csv(TABLES / f"cv_lolo_{model}_wgd.csv")[
+def build_data(model: str, target: str) -> pd.DataFrame:
+    lolo = pd.read_csv(TABLES / f"cv_lolo_{model}_{target}.csv")[
         ["held_out_lineage", "roc_auc", "n_test", "positive_rate"]
     ].rename(columns={"held_out_lineage": "lineage", "n_test": "n"})
-    lolo["base_rate_dev"] = (lolo.positive_rate - 0.652).abs()  # 전체 코호트 WGD+ 비율
 
-    extra = pd.read_csv(TABLES / f"day15_lineage_hypothesis_features_{model}.csv")[
+    # '전체 기저율'을 표현형마다 다시 하드코딩하지 않기 위해, 같은 LOLO 결과
+    # 안에서 세포주 수로 가중평균한 값을 쓴다. WGD 로 검산하면 0.655 로
+    # 원래 쓰던 상수 0.652(전체 코호트 비율, 20개 미만 lineage 포함)와
+    # 거의 같다 — LOLO 는 그 8종을 빼므로 완전히 같지는 않다.
+    global_rate = (lolo.positive_rate * lolo.n).sum() / lolo.n.sum()
+    lolo["base_rate_dev"] = (lolo.positive_rate - global_rate).abs()
+
+    extra = pd.read_csv(TABLES / f"day15_lineage_hypothesis_features_{model}_{target}.csv")[
         ["lineage", "tp53_rate", "mean_burden", "tp53_extremity"]
     ]
-    return lolo.merge(extra, on="lineage")
+    return lolo.merge(extra, on="lineage"), global_rate
 
 
-def panel(ax, df: pd.DataFrame, x_col: str, title: str, xlabel: str, n_label: int = 5) -> None:
+def panel(ax, df: pd.DataFrame, x_col: str, title: str, xlabel: str,
+         target: str, target_label: str, n_label: int = 5) -> None:
     """점 = lineage 1개. AUC 상/하위 n_label 개씩 이름을 붙인다.
 
     패널마다 x 값이 다르므로, 어떤 lineage 가 극단인지도 패널마다 다를 수
     있다 — 고정된 몇 개만 라벨을 다는 대신 이 패널 기준 상/하위를 뽑는다.
     """
     r = spearmanr(df[x_col], df.roc_auc)
-    ax.scatter(df[x_col], df.roc_auc, s=40, color=COLOR, alpha=0.8,
+    ax.scatter(df[x_col], df.roc_auc, s=40, color=PHENOTYPE_COLORS[target], alpha=0.8,
               edgecolor="white", linewidth=0.5, zorder=3)
     ax.axhline(0.5, color="#999", ls=":", lw=0.8, zorder=1)
 
@@ -66,21 +73,24 @@ def panel(ax, df: pd.DataFrame, x_col: str, title: str, xlabel: str, n_label: in
     ax.set_title(f"{title}\nrho={r.statistic:+.3f}, p={r.pvalue:.3f} ({verdict})",
                 fontsize=9.5)
     ax.set_xlabel(xlabel, fontsize=8.5)
-    ax.set_ylabel("LOLO ROC-AUC (WGD)")
+    ax.set_ylabel(f"LOLO ROC-AUC ({target_label})")
     ax.set_ylim(0.28, 0.92)
 
 
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="elastic_net")
+    p.add_argument("--target", default="wgd", help="wgd | cin | loh")
     args = p.parse_args()
+    target_label = TARGET_LABEL[args.target]
 
     use_style()
-    df = build_data(args.model)
+    df, global_rate = build_data(args.model, args.target)
 
     fig, axes = plt.subplots(2, 3, figsize=(14, 9))
     specs = [
-        ("base_rate_dev", "① WGD+ 기저율 편차", "|해당 lineage WGD+ 비율 - 전체 0.652|"),
+        ("base_rate_dev", f"① {target_label}+ 기저율 편차",
+         f"|해당 lineage {target_label}+ 비율 - 전체 {global_rate:.3f}|"),
         ("n", "② 세포주 수", "그 lineage 의 세포주 개수 (n)"),
         ("tp53_rate", "③ TP53 변이율", "그 lineage 안에서 TP53 hotspot/damaging 보유 비율"),
         ("mean_burden", "④ 평균 mutation burden",
@@ -89,7 +99,7 @@ def main() -> int:
          "min(TP53 변이율, 1-TP53 변이율) — 0 에 가까울수록 그 lineage 안에서 변별력 없음"),
     ]
     for ax, (col, title, xlabel) in zip(axes.flat, specs):
-        panel(ax, df, col, title, xlabel)
+        panel(ax, df, col, title, xlabel, args.target, target_label)
     axes.flat[-1].axis("off")  # set_visible(False) 는 이후 text() 까지 숨겨버려서 axis(off) 로 대체
     axes.flat[-1].text(
         0.02, 0.5,
@@ -103,11 +113,11 @@ def main() -> int:
 
     fig.suptitle(
         f"Figure 8. 암종별 LOLO 성능 편차 — 원인 가설 다섯 가지 "
-        f"({MODEL_LABEL.get(args.model, args.model)}, n=24 lineage)",
+        f"({target_label}, {MODEL_LABEL.get(args.model, args.model)}, n=24 lineage)",
         y=1.01, fontsize=12,
     )
     fig.tight_layout()
-    path = save(fig, f"fig8_lineage_hypotheses_{args.model}.png")
+    path = save(fig, f"fig8_lineage_hypotheses_{args.model}_{args.target}.png")
 
     print(f"저장: {path.name}")
     for col, title, _ in specs:

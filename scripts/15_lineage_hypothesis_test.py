@@ -54,9 +54,10 @@ def build_lineage_features(target: str = "wgd", model: str = "elastic_net") -> p
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="elastic_net")
+    p.add_argument("--target", default="wgd", help="wgd | cin | loh")
     args = p.parse_args()
 
-    feat = build_lineage_features("wgd", args.model)
+    feat = build_lineage_features(args.target, args.model)
 
     tests = {
         "TP53 변이율": feat.tp53_rate,
@@ -64,7 +65,7 @@ def main() -> int:
         "TP53 변이율의 극단성(0/1에 가까움)": feat.tp53_extremity,
     }
 
-    print(f"[{args.model} / WGD LOLO, {len(feat)}개 lineage]\n")
+    print(f"[{args.model} / {args.target.upper()} LOLO, {len(feat)}개 lineage]\n")
     for name, series in tests.items():
         r = spearmanr(series, feat.roc_auc)
         verdict = "유의함" if r.pvalue < 0.05 else "기각 (유의하지 않음)"
@@ -73,7 +74,7 @@ def main() -> int:
     print(f"\n검정력 참고: lineage {len(feat)}개로는 |rho|>0.4 정도는 되어야")
     print("  p<0.05 를 얻을 수 있다 — 통계적 검정력 자체가 낮다.")
 
-    out = TABLES / f"day15_lineage_hypothesis_features_{args.model}.csv"
+    out = TABLES / f"day15_lineage_hypothesis_features_{args.model}_{args.target}.csv"
     feat.to_csv(out, index=False)
     print(f"\n저장: {out.name}")
     return 0
