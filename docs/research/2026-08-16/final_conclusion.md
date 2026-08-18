@@ -325,3 +325,52 @@ MSI·gene expression 을 포함한 확장 분석이 후속 과제로 남는다.
    해석해야 한다.
 5. **Day 12 패널 분석은 Elastic Net 기준이다.** 성능 1위인 Random Forest 로
    패널을 다시 뽑으면 결과가 달라질 수 있다.
+
+---
+
+## Related Work
+
+본 연구와 정확히 같은 과제 — **DepMap mutation-only 로 WGD/CIN/LOH 를
+예측** — 를 다룬 선행 연구나 Kaggle 챌린지는 찾지 못했다. 대신 인접한
+연구들을 참고로 남긴다.
+
+* **[Whole-genome doubling confers unique genetic vulnerabilities on tumour cells (Nature, 2021)](https://www.nature.com/articles/s41586-020-03133-3)**
+  ~10,000개 종양 샘플과 ~600개 세포주의 essentiality 데이터로 WGD 가
+  만드는 공통 유전적 특징과 취약점을 분석. WGD 상태 자체는 copy number
+  데이터로 확정하고 그 이후 결과를 분석하는 연구라, 본 연구처럼 "mutation
+  만으로 WGD 를 예측할 수 있는가" 를 묻지는 않는다.
+
+* **[MEDICC2: whole-genome doubling aware copy-number phylogenies (Genome Biology, 2022)](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02794-9)**
+  Haplotype-specific copy-number 데이터로 종양의 진화 계통수와 WGD 시점을
+  추론하는 방법론. copy number 를 직접 입력으로 쓰므로 WGD 와 사실상
+  같은 정보를 보는 것에 가깝다 — 본 연구가 CNV/ploidy 를 §7 에서 의도적으로
+  제외한 이유(순환논리·정답 누출)와 맞닿아 있다.
+
+* **[An original aneuploidy-related gene model for predicting lung adenocarcinoma survival (Scientific Reports, 2024)](https://www.nature.com/articles/s41598-024-58020-y)**
+  Aneuploidy 관련 유전자의 **발현량**으로 위험 점수를 만들어 생존을
+  예측. GEO/TCGA 코호트에서 AUC 0.70~0.81 을 보고했다. 본 연구와 입력
+  모달리티(발현 vs mutation 유무)와 과제(생존 예측 vs 직접 표현형 분류)가
+  다르지만, **정보가 더 풍부한 입력(연속형 발현량)을 쓰고도 0.7~0.81 근방에서
+  막힌다는 점**은 본 연구의 mutation-only 결과(ROC-AUC 0.73~0.77)가
+  유사한 상한 근처에 있다는 정황 근거가 된다.
+
+* **[MSI, Ploidy & Mutational Burden — DepMap Sanger 문서](https://depmap.sanger.ac.uk/documentation/cell-models/msi-ploidy-mutational-burden/)**
+  DepMap 세포주의 MSI·ploidy·TMB 데이터 설명 문서. 직접적인 예측 연구는
+  아니지만, 본 연구가 §7 에서 제외한 지표들의 정의와 배포처를 확인하는
+  데 참고했다.
+
+### 이 검색에서 얻은 것
+
+명시적인 "mutation-only → 유전체 불안정성" 벤치마크는 없었지만, 두 가지
+정황은 확인했다.
+
+1. 위 연구들처럼 **입력이 더 풍부해도(copy number, 연속형 발현량)** 인접
+   과제의 성능이 대체로 0.7~0.85 구간에 몰려 있다 — 본 연구의 결과가
+   특별히 낮은 편은 아니라는 뜻이다.
+2. 선행 연구들은 개별 유전자 컬럼이 아니라 **mutation signature(trinucleotide
+   context)** 나 **pathway 단위 mutation burden** 을 입력으로 쓰는 경우가
+   많다. 이는 "알고리즘을 바꾸는" 것과는 다른 축의 개선이며, 본 연구가
+   §26②·Figure 3 에서 확인한 "모델을 바꿔도 같은 신호만 본다"(RF/XGBoost/
+   CatBoost feature importance 상관 0.56~0.61)는 결과와 상충하지 않는다.
+   오히려 sparsity 를 줄이는 representation 변경이 다음으로 시도해볼
+   방향임을 시사한다.
