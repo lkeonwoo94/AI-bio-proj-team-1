@@ -57,9 +57,12 @@ ROC-AUC 평균:
 
 ## 4. 반복 feature selection (Day 11, Elastic Net)
 
-전 fold(5/5)에서 선택된 유전자:
+전 fold(5/5)에서 선택된 유전자 기준:
 
-* **세 표현형 공통**: `TP53`(damaging), `ID3`, `BRAF`(hotspot), `CREBBP`
+* **세 표현형 모두 전 fold(5/5) 선택**: `TP53`(damaging), `ID3`, `BRAF`(hotspot)
+* **WGD·LOH 는 전 fold(5/5), CIN 만 4/5**: `CREBBP`(damaging) — 세
+  표현형 "공통" 후보로 묶이지만 완전한 전 fold 일치는 아니다. 정확한
+  수치는 `final_conclusion.md` §26-③ 표 참고.
 * **WGD 특이**: `TERT`(hotspot), `NF2`, `CCND3`, `LRP1B`, `TGFBR2`
 * **CIN 특이**: `RB1`, `PIK3CA`(hotspot), `SLFN11`
 * **LOH 특이**: `NF2`, `PITX1`, `MUC19`, `ABCB5`

@@ -66,14 +66,17 @@ Elastic Net 으로 outer 5 fold 각각의 training data 에서 feature selection
 반복한 결과, 5/5 fold 에서 선택된 유전자는
 WGD 12개 / CIN 5개 / LOH 9개였다.
 
-**세 표현형 공통 (전 fold 선택):**
+**세 표현형 공통 후보** (표는 fold 선택 빈도, 1.0 = 5/5 전 fold):
 
 | 유전자 | 유형 | WGD | CIN | LOH |
 | --- | --- | ---: | ---: | ---: |
 | `TP53` | damaging | 1.0 | 1.0 | 1.0 |
 | `ID3` | damaging | 1.0 | 1.0 | 1.0 |
 | `BRAF` | hotspot | 1.0 | 1.0 | 1.0 |
-| `CREBBP` | damaging | 1.0 | 0.8 | 1.0 |
+| `CREBBP` | damaging | 1.0 | **0.8** | 1.0 |
+
+`TP53`/`ID3`/`BRAF` 만 세 표현형 모두 전 fold(5/5) 선택이다. `CREBBP` 는
+WGD·LOH 는 전 fold(5/5)지만 CIN 은 4/5 로, 완전한 "전 fold 공통"은 아니다.
 
 **표현형 특이적:**
 
@@ -216,8 +219,9 @@ trees 계열임에도 성능이 거의 동일했는데(0.738 vs 0.730), 이는 C
 못하여, 본 설정에서는 표현형 간 공유 표현의 이득이 관측되지 않았다.
 
 **중요 변이.** 각 fold 의 training data 에서 feature selection 을 반복한
-결과 `TP53`(damaging), `ID3`, `BRAF`(hotspot), `CREBBP` 가 세 표현형
-모두에서 전 fold 선택되었으며, 특히 `TP53` 은 세 표현형 모두 평균 순위 1.0
+결과 `TP53`(damaging), `ID3`, `BRAF`(hotspot) 가 세 표현형 모두에서
+전 fold 선택되었고, `CREBBP` 도 WGD·LOH 는 전 fold, CIN 은 4/5 fold 로
+근접한 공통 후보였다. 특히 `TP53` 은 세 표현형 모두 평균 순위 1.0
 (순위 표준편차 0.0)으로 예외 없이 1위였다. 표현형 특이적으로는 WGD 에서
 `TERT`(hotspot)와 `NF2`, CIN 에서 `RB1` 과 `PIK3CA`(hotspot), LOH 에서
 `NF2` 와 `PITX1` 이 반복 선택되었다.
