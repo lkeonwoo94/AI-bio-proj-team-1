@@ -66,6 +66,27 @@ def cohort_matrix_stats() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def cohort_matrix_top_columns(top_n: int = 10) -> pd.DataFrame:
+    """cohort.X 의 컬럼(유전자)별 통계 상위 top_n — 분산 기준.
+
+    이진 변수의 var = mean*(1-mean) 이므로 분산 상위는 곧 '양성비율이
+    0.5 에 가장 가까운' 유전자들이다. 20,132개를 뭉뚱그린 doc_cohort_X_stats
+    와 달리 개별 유전자 수준을 보여준다.
+    """
+    X = load_cohort().X
+    var = X.var(axis=0, ddof=0)
+
+    top = pd.DataFrame({
+        "column": X.columns,
+        "dtype": [str(X[c].dtype) for c in X.columns],
+        "min": X.min(axis=0).to_numpy(),
+        "max": X.max(axis=0).to_numpy(),
+        "mean": X.mean(axis=0).to_numpy(),
+        "var": var.to_numpy(),
+    })
+    return top.sort_values("var", ascending=False).head(top_n).reset_index(drop=True)
+
+
 def global_signatures_stats() -> pd.DataFrame:
     sig = pd.read_csv(data_path("global_signatures"))
     default = sig[sig.IsDefaultEntryForModel == "Yes"]
@@ -102,6 +123,11 @@ def main() -> int:
     print("\n[학습 직전 X — cohort.X, 병합·이진화 완료] row/col 과 셀 값 분포")
     print(cohort_mat.to_string(index=False))
     cohort_mat.to_csv(TABLES / "doc_cohort_X_stats.csv", index=False)
+
+    top_cols = cohort_matrix_top_columns(top_n=10)
+    print("\n[학습 직전 X — 컬럼별 분산 상위 10개]")
+    print(top_cols.to_string(index=False))
+    top_cols.to_csv(TABLES / "doc_cohort_X_top10_columns.csv", index=False)
 
     sig = global_signatures_stats()
     print("\n[OmicsGlobalSignatures.csv]")
