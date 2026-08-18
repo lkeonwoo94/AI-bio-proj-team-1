@@ -26,7 +26,7 @@ TARGETS = ("wgd", "cin", "loh")
 TARGET_LABEL = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
 
 
-def plot_curve(metrics: pd.DataFrame, sizes: list[int]) -> Path:
+def plot_curve(metrics: pd.DataFrame, sizes: list[int], model: str) -> Path:
     use_style()
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.4))
     order = [str(s) for s in sizes] + ["all"]
@@ -56,7 +56,7 @@ def plot_curve(metrics: pd.DataFrame, sizes: list[int]) -> Path:
     fig.suptitle("Figure 5. 패널 크기별 예측 성능 (점선은 전체 feature 성능)",
                  y=1.02, fontsize=12)
     fig.tight_layout()
-    return save(fig, "fig5_panel_curve.png")
+    return save(fig, f"fig5_panel_curve_{model}.png")
 
 
 def main() -> int:
@@ -115,10 +115,10 @@ def main() -> int:
         genes = ", ".join(f.split(" (")[0] for f in common.feature.head(12))
         print(f"  {TARGET_LABEL[target]}: {len(common)}개 — {genes}")
 
-    metrics.to_csv(TABLES / "day12_panel_metrics.csv", index=False)
-    picks.to_csv(TABLES / "day12_panel_picks.csv", index=False)
-    stab.to_csv(TABLES / "day12_panel_stability.csv", index=False)
-    path = plot_curve(metrics, sizes)
+    metrics.to_csv(TABLES / f"day12_panel_metrics_{args.model}.csv", index=False)
+    picks.to_csv(TABLES / f"day12_panel_picks_{args.model}.csv", index=False)
+    stab.to_csv(TABLES / f"day12_panel_stability_{args.model}.csv", index=False)
+    path = plot_curve(metrics, sizes, args.model)
     print(f"\n저장: {path.name}, day12_*.csv")
     return 0
 

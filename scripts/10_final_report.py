@@ -51,7 +51,7 @@ def q2_best_model() -> None:
 
 def q3_important_mutations() -> None:
     print("③ 어떤 mutation 이 반복적으로 선택되었는가?")
-    cross = _read("day11_cross_phenotype.csv")
+    cross = _read("day11_cross_phenotype_elastic_net.csv")
     if cross is None:
         print("   (07_aggregate_selection.py 필요)\n")
         return
@@ -66,7 +66,7 @@ def q3_important_mutations() -> None:
 
 def q4_minimal_panel() -> None:
     print("④ 몇 개까지 줄여도 성능이 유지되었는가?")
-    df = _read("day12_panel_metrics.csv")
+    df = _read("day12_panel_metrics_elastic_net.csv")
     if df is None:
         print("   (08_panel_curve.py 필요)\n")
         return
@@ -80,7 +80,7 @@ def q4_minimal_panel() -> None:
                 parts.append(f"{k}개 {pivot.loc[target, k] / full:.0%}")
         print(f"   {TARGET_LABEL[target]}: 전체 {full:.3f} 대비 — " + " | ".join(parts))
 
-    stab = _read("day12_panel_stability.csv")
+    stab = _read("day12_panel_stability_elastic_net.csv")
     if stab is not None:
         print("\n   패널 안정성 (fold 간 Jaccard):")
         piv = stab.pivot(index="target", columns="panel_size", values="jaccard")

@@ -31,7 +31,7 @@ def short(feature: str, width: int = 22) -> str:
     return label[:width]
 
 
-def plot_stability(aggs: dict[str, pd.DataFrame], top_n: int = 15) -> Path:
+def plot_stability(aggs: dict[str, pd.DataFrame], model: str, top_n: int = 15) -> Path:
     use_style()
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
@@ -51,7 +51,7 @@ def plot_stability(aggs: dict[str, pd.DataFrame], top_n: int = 15) -> Path:
     fig.suptitle("Figure 4. 반복 feature selection 안정성 (Elastic Net, outer 5-fold)",
                  y=1.02, fontsize=12)
     fig.tight_layout()
-    return save(fig, "fig4_selection_stability.png")
+    return save(fig, f"fig4_selection_stability_{model}.png")
 
 
 def main() -> int:
@@ -70,7 +70,7 @@ def main() -> int:
 
         agg = aggregate_selection(pd.read_csv(path), top_k=args.top_k)
         aggs[target] = agg
-        agg.to_csv(TABLES / f"day11_selection_{target}.csv", index=False)
+        agg.to_csv(TABLES / f"day11_selection_{args.model}_{target}.csv", index=False)
 
         stable = agg[agg.selection_freq == 1.0]
         print(f"\n[{TARGET_LABEL[target]}] 전 fold 선택 {len(stable)}개 "
@@ -88,9 +88,9 @@ def main() -> int:
     if not cross.empty:
         cols = ["feature"] + [c for c in cross.columns if c.endswith("_freq")] + ["n_phenotypes"]
         print(cross[cols].round(2).to_string(index=False))
-        cross.to_csv(TABLES / "day11_cross_phenotype.csv", index=False)
+        cross.to_csv(TABLES / f"day11_cross_phenotype_{args.model}.csv", index=False)
 
-    path = plot_stability(aggs)
+    path = plot_stability(aggs, args.model)
     print(f"\n저장: {path.name}, day11_*.csv")
     return 0
 

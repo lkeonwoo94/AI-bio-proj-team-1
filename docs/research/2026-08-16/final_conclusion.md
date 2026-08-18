@@ -130,7 +130,9 @@ WGD·LOH 는 전 fold(5/5)지만 CIN 은 4/5 로, 완전한 "전 fold 공통"은
 README §25 의 "작은 패널 성능 유지" 와 "신호가 여러 유전자에 분산" 이
 섞인 중간 형태이며, §18 의 안정성 기준을 충족한다고 보기는 어렵다.
 따라서 **고정된 10개 패널을 제시하기보다 위의 합의 유전자(consensus)를
-핵심 축으로 제시**하는 것이 데이터에 충실하다.
+핵심 축으로 제시**하는 것이 데이터에 충실하다. (Random Forest 로 재검증한
+결과 이 불안정성은 Elastic Net 특유의 현상에 가까웠다 — 한계 5번 및
+"Day 11/12 Random Forest 재검증" 절 참조.)
 
 ## ⑤ 이 결과가 다른 cancer lineage 에서도 유지되었는가?
 
@@ -327,8 +329,69 @@ MSI·gene expression 을 포함한 확장 분석이 후속 과제로 남는다.
 4. **multi-task ANN 의 탐색이 얕다.** torch 없이 sklearn MLPClassifier 로
    구현해 구조·정규화 탐색 폭이 좁았다. RQ4 의 부정적 결과는 이 한계 안에서
    해석해야 한다.
-5. **Day 12 패널 분석은 Elastic Net 기준이다.** 성능 1위인 Random Forest 로
-   패널을 다시 뽑으면 결과가 달라질 수 있다.
+5. ~~Day 12 패널 분석은 Elastic Net 기준이다.~~ **[해소] Random Forest 로
+   재검증 완료.** 방향은 같고 안정성은 오히려 RF 가 더 좋다 — 아래 참조.
+
+---
+
+## Day 11/12 Random Forest 재검증
+
+한계 5번을 직접 확인했다. 성능 1위 모델(Random Forest, §26②)로 feature
+selection(Day 11)과 패널 곡선(Day 12)을 다시 돌려 Elastic Net 결과와
+비교했다.
+
+### 패널 성능 — 방향은 동일
+
+| | WGD 전체→10개 | CIN 전체→10개 | LOH 전체→10개 |
+| --- | --- | --- | --- |
+| Elastic Net | 0.749→0.727 (97.1%) | 0.681→0.674 (99.0%) | 0.711→0.669 (94.1%) |
+| Random Forest | 0.765→0.729 (95.3%) | 0.734→0.682 (92.9%) | 0.730→0.687 (94.1%) |
+
+두 모델 모두 "10개로 93~99% 유지"라는 §26④ 결론을 그대로 지지한다.
+모델을 바꿔도 최소 패널의 성능 유지율 자체는 바뀌지 않는다.
+
+### 패널 안정성 — RF 가 더 안정적이다 (예상 밖 발견)
+
+10개 패널의 fold 간 Jaccard 유사도:
+
+| | WGD | CIN | LOH |
+| --- | ---: | ---: | ---: |
+| Elastic Net | 0.410 | 0.332 | 0.295 |
+| **Random Forest** | **0.607** | **0.520** | **0.544** |
+
+세 표현형 모두 RF 가 크게 앞선다. 즉 §26④ 에서 지적한 "패널 구성이
+fold 마다 달라진다"는 문제는 **mutation 신호 자체의 한계라기보다 Elastic
+Net 의 L1 선택 절차가 상대적으로 불안정한 것에 가깝다.** RF 의
+impurity-based importance 가 resampling 에 덜 민감하기 때문으로 보인다.
+따라서 §26④ 의 "안정성 기준 미달" 평가는 **모델을 Random Forest 로
+바꾸면 상당 부분 완화된다** — 다만 여전히 1.0(완전 일치)에는 못 미친다.
+
+### 모델 간 합의 유전자 — 진짜 consensus panel
+
+fold 뿐 아니라 **모델까지 넘어** 두 방법 모두에서 평균 선택빈도 0.6 이상인
+유전자:
+
+| 유전자 | Elastic Net | Random Forest |
+| --- | ---: | ---: |
+| `TP53`(damaging) | 1.00 | 1.00 |
+| `ID3`(damaging) | 1.00 | 1.00 |
+| `BRAF`(hotspot) | 1.00 | 1.00 |
+| `CREBBP`(damaging) | 0.93 | 1.00 |
+| `RB1`(damaging) | 0.80 | 1.00 |
+| `TP53`(hotspot) | 0.60 | 1.00 |
+| `PITX1`(damaging) | 0.67 | 0.93 |
+| `TERT`(hotspot) | 0.67 | 0.87 |
+
+이 8개는 fold 도, 모델도 넘어 반복적으로 뽑히는 유전자다. §26③·§27 의
+"핵심 축"(TP53/ID3/BRAF/CREBBP)이 여기서도 상위권을 유지하며, RB1·
+TP53(hotspot)·PITX1·TERT 가 모델 간 합의로 새로 추가된다. **candidate
+minimal panel 을 제시할 때 이 8개를 최우선으로 삼는 것이 Elastic Net
+단일 모델 기준보다 근거가 강하다.**
+
+재현: `python scripts/07_aggregate_selection.py --model random_forest`,
+`python scripts/08_panel_curve.py --model random_forest`. Figure 4/5 는
+이제 모델명이 파일명에 들어간다
+(`fig4_selection_stability_{model}.png`, `fig5_panel_curve_{model}.png`).
 
 ---
 
