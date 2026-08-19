@@ -89,14 +89,32 @@ specificity 가 더 높다. Balanced accuracy(0.715 vs 0.700)는 비슷해도
 않다. Brier(확률 보정)는 세 표현형 모두 signature 쪽이 근소하게
 낮다(더 좋다) — 특히 WGD 는 0.204→0.188.
 
+**① 유전자 단위 → ② signature(96개) → ③ 유전자+signature 결합**(biomarker_panel.md
+§5, `panel_size="all"` 기준)까지 세 단계를 이어서 보면 그림이 더
+분명해진다.
+
 ![Figure 18](../../../results/figures/fig18_sens_spec_tradeoff.png)
 
-Figure 18 에 유전자→signature 이동을 화살표로 그렸다. **WGD·Random
-Forest 의 화살표만 sens=spec 대각선을 가로질러 반대편으로 넘어간다**
-— CIN·LOH 는 두 모델 모두 대각선 아래(sensitivity 우세) 쪽에 머무는
-반면, WGD·RF 만 대각선을 넘어 specificity 우세 쪽으로 이동한다. 표현
-방식 전환이 트레이드오프의 "정도"만 바꾸는 게 아니라 "방향" 자체를
-바꾸는 유일한 조합이라는 뜻이다.
+| 표현형 | 모델 | ①→②→③ sens/spec 우세 | 대각선을 넘는 지점 |
+| --- | --- | --- | --- |
+| WGD | Logistic | spec우세 → sens우세 → sens우세 | ①→② |
+| WGD | Random Forest | sens우세 → spec우세 → spec우세 | ①→② |
+| CIN | Logistic | sens우세 → sens우세 → sens우세 | 없음 |
+| CIN | Random Forest | sens우세 → sens우세 → sens우세 | 없음 |
+| LOH | Logistic | spec우세 → sens우세 → sens우세 | ①→② |
+| LOH | Random Forest | sens우세 → sens우세 → **spec우세** | ②→③ |
+
+**CIN 만 두 모델 모두, 세 단계 내내 sensitivity 우세를 그대로
+유지한다** — 표현 방식을 뭘 쓰든 CIN 의 오류 패턴(양성을 더 잘
+잡고 음성을 더 놓치는 방향)은 안정적이라는 뜻이다. 반대로 WGD 와
+LOH 는 최소 한 번은 대각선을 넘는다 — WGD 는 ①→②(유전자→signature)
+단계에서, LOH·Random Forest 는 오히려 ②→③(signature→결합) 단계에서
+넘어간다는 점이 다르다. **즉 "표현 방식을 바꾸면 트레이드오프
+방향이 흔들리는 표현형(WGD, LOH)"과 "안 흔들리는 표현형(CIN)"이
+갈린다** — 어떤 표현으로 패널을 배포하든 CIN 은 예측 가능한 오류
+패턴을 유지하지만, WGD·LOH 는 어떤 조합을 쓰느냐에 따라 "어느 쪽
+오류를 감수할지"가 달라질 수 있다는 뜻이라 실무 적용 시 주의가
+필요하다.
 
 재현: `python scripts/36_plot_sens_spec_tradeoff.py`.
 
