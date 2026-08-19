@@ -92,6 +92,13 @@ missense 기반 불활성화(TCGA TP53 변이의 대다수)를 놓쳐 가장 중
    (Jaccard 0.27\~0.44).** 한계 6 의 이진화 손실이 "어떤 유전자가
    선택되는가"에는 크게 반영되지 않았다는 뜻이다 — 손실은 판별 성능
    지표(ROC-AUC vs Spearman rho)에서만 나타났다.
+10. **유전자와 signature 를 한 feature 공간에 합치면 6/6 조합 전부
+    성능이 오른다(+0.013\~+0.078, biomarker_panel.md §5).** 다만 결합
+    패널의 "구성"(유전자 몇 개, signature 몇 개)은 모델을 반드시
+    명시해야 한다 — Random Forest 는 Gini importance 의 cardinality
+    편향으로 signature 쪽에 극단적으로 쏠리고, Logistic(L1) 은 균형
+    잡힌 구성(4.5:5.5)을 보인다. 두 모델이 정반대 그림을 준다는 점
+    자체가 "결합 패널의 구성"을 액면 그대로 해석하면 안 되는 이유다.
 
 ---
 
@@ -102,6 +109,9 @@ missense 기반 불활성화(TCGA TP53 변이의 대다수)를 놓쳐 가장 중
 * ~~Mutation signature(96개)를 §26③·④ 의 패널 selection 에
   결합해보기~~ **[완료]** — 20\~30개 패널로 95\~99% 유지,
   additional_results.md §4 후속 참고
+* ~~유전자와 signature 를 한 feature 공간에서 결합해보기~~ **[완료]**
+  — 6/6 조합 성능 개선, 다만 RF 는 importance 의 cardinality 편향
+  가능성이 있어 Logistic(L1) 기준 해석을 우선함, biomarker_panel.md §5
 * TCGA missense pathogenicity 점수(PolyPhen/SIFT/REVEL)를 반영해 TCGA
   검증을 더 정확한 값으로 재추정하기
 * CIN/LOH 에 대응하는 TCGA aneuploidy score/LOH fraction 확보(페이월

@@ -74,7 +74,9 @@ Forest)만 비교했다(08-19 additional_results.md §4).
 **"어떤 모델이 최고인가"와 "어떤 입력 표현이 최고인가"는 서로 다른
 축의 질문**이라는 점을 분명히 하기 위해서다. 유전자 단위와 signature
 를 같은 nested CV 안에서 함께 feature selection 시킨 결합 실험은
-`biomarker_panel.md` 에 별도로 정리할 예정이다(진행 중).
+[biomarker_panel.md §5](biomarker_panel.md#5-후속--유전자--signature-결합-패널-실행-결과)
+에 정리했다 — 결합 시 6/6 조합 전부 성능이 더 오른다(Random Forest
++WGD 0.797, 이 프로젝트 전체 최고 ROC-AUC).
 
 재현: `python scripts/24_signature_representation.py`.
 

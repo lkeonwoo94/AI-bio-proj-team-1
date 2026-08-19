@@ -119,12 +119,9 @@ importance(`feature_importances_`, 표현형별 outer 5-fold 평균)로,
   패널 후보로 부적절하다(additional_results.md §3).
 * **Mutation signature(96-class)** — 성능은 개선됐지만(5/6 조합) 이건
   "어떤 유전자에 변이가 있는가"가 아니라 "어떤 종류의 변이 발생
-  과정이었는가"를 보는 **다른 축의 정보**다. 유전자 단위 biomarker
-  panel과 같은 표에 놓을 수 없어 이 문서에서는 제외했다 — 대신
-  `T[C>A]C` 등 signature 자체의 후보 class 는
-  additional_results.md §4 후속 절에 별도로 정리돼 있다. 향후 두 축을
-  합친 "혼합 패널"(유전자 + signature class)을 시도해볼 여지는 남아있다
-  (08-19 final_conclusion.md "남은 과제").
+  과정이었는가"를 보는 **다른 축의 정보**다. §1의 "유전자 후보 패널"과
+  같은 표에는 놓을 수 없어 제외했다 — 다만 두 축을 실제로 합친 결과는
+  아래 **§6**에서 별도로 다룬다.
 * **§26③의 나머지 표현형 특이 유전자**(`NF2`, `CCND3`, `LRP1B`,
   `TGFBR2`, `SLFN11`, `MUC19`, `ABCB5`) — Elastic Net 단독 fold 선택
   (5/5)에서는 나왔지만 Random Forest 모델 합의표나 회귀 재검증으로
@@ -133,7 +130,93 @@ importance(`feature_importances_`, 표현형별 outer 5-fold 평균)로,
 
 ---
 
-## 5. 재현
+## 5. 후속 — 유전자 + Signature 결합 패널 (실행 결과)
+
+§4에서 "향후 시도 여지"로 남겨뒀던 것을 실제로 실행했다. 유전자(training
+fold 에서 `RareMutationFilter` 로 희귀 변이 제거, \~1,200\~1,470개)와
+signature 96개를 **한 feature 공간에 합쳐서** 같은 fold 안에서 함께
+feature selection 을 시켰다 — "패널에 signature feature 를 섞으면 더
+나아지는가"(08-16 Future Work 2 한계)에 대한 직접적인 답이다.
+
+### 성능 — 결합이 6/6 조합 전부에서 단일 축을 이긴다
+
+| 모델 | 표현형 | 유전자만 | Signature만 | 결합 | 결합-유전자 | 결합-signature |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Logistic(L1) | WGD | 0.723 | 0.713 | **0.791** | +0.068 | +0.078 |
+| Logistic(L1) | CIN | 0.672 | 0.711 | **0.746** | +0.074 | +0.035 |
+| Logistic(L1) | LOH | 0.683 | 0.693 | **0.755** | +0.072 | +0.062 |
+| Random Forest | WGD | 0.765 | 0.770 | **0.797** | +0.032 | +0.027 |
+| Random Forest | CIN | 0.734 | 0.762 | **0.775** | +0.041 | +0.013 |
+| Random Forest | LOH | 0.730 | 0.743 | **0.765** | +0.035 | +0.022 |
+
+**6개 조합 전부 결합이 더 높다.** 이는 08-19 additional_results.md
+§4에서 이미 확인한 "유전자 정체성 축"과 "변이 발생 과정 축"이 서로
+다른 정보를 담고 있다는 해석과 일치한다 — 두 축을 실제로 합치니 각각
+따로 쓸 때보다 낫다는 것이 직접 확인됐다. Random Forest+WGD(0.797)는
+이 프로젝트 전체를 통틀어 가장 높은 ROC-AUC다.
+
+### 구성 — 모델에 따라 완전히 다르게 갈린다 (중요한 주의사항 포함)
+
+10개 결합 패널 안에서 유전자와 signature class 가 각각 몇 개씩
+뽑히는지 보면 두 모델이 정반대로 갈린다(Figure 17b, 3표현형 평균):
+
+| 모델 | 유전자 | Signature class |
+| --- | ---: | ---: |
+| Logistic(L1) | 4.5개 | 5.5개 — **균형** |
+| Random Forest | 1.1개 | 8.9개 — **signature 쪽으로 크게 쏠림** |
+
+**Random Forest 에서는 `TP53`(damaging) 한 개를 제외한 거의 모든
+유전자가 top-30 밖으로 밀려난다** — WGD/CIN/LOH 세 표현형 모두
+`TP53`(damaging)만 전 fold(5/5) 공통으로 살아남고, `BRAF`/`ID3`/
+`CREBBP`/`RB1` 같은 기존 핵심 축조차 결합 공간에서는 순위 밖이다.
+
+**이 결과를 "signature 가 유전자보다 우월하다"로 읽으면 안 된다.**
+Random Forest 의 impurity-based importance(Gini importance)는 **연속형/
+다치(多値) feature 를 이진 feature 보다 유리하게 평가하는 경향이
+알려져 있다** — signature 96개는 0\~1 사이 연속 비율값이라 분기점
+후보가 많지만, 유전자는 0/1 이진값이라 분기점이 하나뿐이다. 즉
+Random Forest 결합 결과의 극단적인 signature 쏠림은 **생물학적
+신호라기보다 RF importance 계산 방식의 알려진 편향일 가능성이 크다.**
+
+반대로 **Logistic(L1) 은 이런 cardinality 편향이 없어 더 신뢰할 만한
+그림을 준다** — 균형 잡힌 구성(4.5:5.5)에 더해, 전 fold 공통으로 뽑힌
+유전자를 보면 기존 핵심 축이 그대로 살아있다:
+
+| 표현형 | 전 fold 공통 유전자 | 전 fold 공통 signature class |
+| --- | --- | --- |
+| WGD | TP53, BRAF, ID3, TERT, CREBBP | C[T\>C]G, G[C\>T]C, T[C\>A]C, C[C\>T]G, A[C\>T]T |
+| CIN | TP53, ID3, BRAF, CREBBP | T[C\>A]C, A[C\>T]T, C[T\>A]T, T[C\>G]A, C[C\>T]G, A[C\>A]A |
+| LOH | TP53, NF2, ID3, NRAS, ARID1A, PITX1 | T[C\>A]C, T[C\>T]G, A[C\>T]G, C[C\>T]G, G[C\>A]T, A[C\>A]A |
+
+WGD·CIN 는 §1의 핵심 축(TP53/ID3/BRAF/CREBBP)과 정확히 일치한다. LOH
+에서는 기존 패널의 `NF2`/`PITX1` 이 재확인되는 동시에 `NRAS`/`ARID1A`
+가 **새 후보**로 등장했다 — 다만 이 둘은 fold·모델·회귀 등 다른 축의
+교차검증을 거치지 않은 **1회성 관측**이라 §1 최종 패널에는 아직
+포함하지 않았다. `T[C>A]C` 는 여기서도 세 표현형 전부 공통으로
+뽑혀, additional_results.md §4의 "signature 쪽 가장 안정적인 단일
+신호"라는 관찰과 다시 한번 일치한다.
+
+### 결론
+
+* 결합이 성능을 항상 올린다는 것은 **강하고 일관된 결과**다(6/6, 모델
+  무관).
+* "결합했을 때 무엇이 선택되는가"는 **모델을 반드시 명시해야 하는
+  결과**다 — Random Forest 만 보고 "signature 가 유전자를 대체한다"고
+  결론 내리면 RF importance 의 알려진 편향을 생물학적 신호로 오독하는
+  것이다. Logistic(L1) 기준으로는 §1의 핵심 축이 그대로 유지된다.
+* §1의 "최종 후보 패널"은 이번 결과로 바뀌지 않는다 — 다만 "성능을
+  극대화하려면 유전자 패널에 signature class 를 더하는 것이 유효하다"
+  는 것과, LOH 의 `NRAS`/`ARID1A` 라는 추가 확인이 필요한 후보가
+  새로 생겼다는 점을 기록해 둔다.
+
+Figure 17(`fig17_combined_panel.png`)에 성능·구성을 나란히 그렸다.
+
+재현: `python scripts/32_combined_gene_signature_panel.py`,
+`python scripts/35_plot_combined_panel.py`.
+
+---
+
+## 6. 재현 (§1\~4)
 
 ```bash
 python scripts/07_aggregate_selection.py --model random_forest
