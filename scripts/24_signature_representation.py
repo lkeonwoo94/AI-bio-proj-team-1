@@ -57,11 +57,14 @@ def build_pipeline(model_name: str):
 
 
 def run_signature_cv(X: pd.DataFrame, y_raw: pd.Series, groups: pd.Series,
-                     model_name: str, target: str, n_jobs: int = -1) -> pd.DataFrame:
+                     model_name: str, target: str, n_jobs: int = -1,
+                     seed: int | None = None) -> pd.DataFrame:
+    """seed 는 outer fold 구성만 바꾼다(재현성 확인용, scripts/27 참고).
+    None 이면 configs/experiment.yaml 의 기본 seed 를 쓴다."""
     y_strat = LabelBinarizer(target).fit_transform(y_raw)
     rows = []
 
-    for fold, (tr, te) in enumerate(outer_splits(y_strat.to_numpy(), groups, scheme="random")):
+    for fold, (tr, te) in enumerate(outer_splits(y_strat.to_numpy(), groups, scheme="random", seed=seed)):
         binz = LabelBinarizer(target).fit(y_raw.iloc[tr])
         y_tr = binz.transform(y_raw.iloc[tr]).to_numpy()
         y_te = binz.transform(y_raw.iloc[te]).to_numpy()

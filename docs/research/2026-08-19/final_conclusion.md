@@ -75,17 +75,36 @@ missense 기반 불활성화(TCGA TP53 변이의 대다수)를 놓쳐 가장 중
    놓쳐 실제 일반화 성능보다 낮게 나왔을 가능성이 크다 — 정확한 값은
    missense pathogenicity 분류기 없이는 알 수 없다.
 8. **Mutation signature 는 원시 96-class 분포이지 정식 NMF 분해가
-   아니다.** 5/6 조합 개선이라는 표본도 작아 다른 seed·fold 에서
+   아니다.** ~~5/6 조합 개선이라는 표본도 작아 다른 seed·fold 에서
    재현되는지 확인하지 않았고, 이 96개 feature 를 최소 패널 분석에
-   아직 연결하지 못했다.
+   아직 연결하지 못했다.~~ **[부분 해소]** signature 성능 자체의 seed
+   재현성(3-seed 범위 0.001\~0.005)과 96개 feature 의 최소 패널(20\~30개로
+   95\~99% 유지)은 확인했다 — 다만 "정식 NMF 분해가 아니다"라는
+   근본 한계와 "5/6 조합 개선 비교 자체의 seed 재현성"은 여전히 남아있다
+   (유전자 단위 baseline 을 seed 마다 다시 돌리지 않았음, 상세는
+   additional_results.md §4 "한계" 참고).
+
+**추가로 확인된 것 (이번 회차 후속 실험):**
+
+9. **CIN 회귀 기반 패널과 분류 기반 패널의 핵심 유전자는 크게 겹친다
+   (Jaccard 0.27\~0.44).** 한계 6 의 이진화 손실이 "어떤 유전자가
+   선택되는가"에는 크게 반영되지 않았다는 뜻이다 — 손실은 판별 성능
+   지표(ROC-AUC vs Spearman rho)에서만 나타났다.
 
 ---
 
 ## 남은 과제
 
-* CIN 패널을 회귀 기반 feature selection 으로 다시 뽑아보기 (한계 6 후속)
-* Mutation signature(96개)를 §26③·④ 의 패널 selection 에 결합해보기
+* ~~CIN 패널을 회귀 기반 feature selection 으로 다시 뽑아보기~~
+  **[완료]** — 핵심 유전자 겹침 확인, additional_results.md §2 후속 참고
+* ~~Mutation signature(96개)를 §26③·④ 의 패널 selection 에
+  결합해보기~~ **[완료]** — 20\~30개 패널로 95\~99% 유지,
+  additional_results.md §4 후속 참고
 * TCGA missense pathogenicity 점수(PolyPhen/SIFT/REVEL)를 반영해 TCGA
   검증을 더 정확한 값으로 재추정하기
 * CIN/LOH 에 대응하는 TCGA aneuploidy score/LOH fraction 확보(페이월
   뒤 supplementary table 접근이 필요)
+* Mutation signature 를 COSMIC reference 대비 정식 NMF/NNLS exposure 로
+  재분해하기(한계 8, 새 reference 데이터 확보 필요)
+* "signature > 유전자 단위" 비교 자체의 seed 재현성 확인(유전자 단위
+  baseline 을 포함한 전체 재실행 필요, 비용 큼)

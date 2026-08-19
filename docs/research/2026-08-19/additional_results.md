@@ -155,15 +155,49 @@ ROC-AUC 와 Spearman rho 는 척도가 달라 직접 등치할 수 없다. 방�
 **결론을 바꾸지는 않는다.** 08-16 §26①의 "제한적으로 가능하다"는
 판단은 회귀로 봐도 유지된다(R² 0.15\~0.27 은 여전히 중간 정도의
 설명력이다). 다만 **Elastic Net 기반 CIN 패널(08-16 §26③·④)은 이진화
-손실을 어느 정도 안고 있을 수 있다**는 점을 한계로 추가한다 — 향후
-회귀 기반 feature selection 으로 CIN 패널을 다시 뽑아보는 것이 자연스러운
-후속 과제다.
+손실을 어느 정도 안고 있을 수 있다**는 점을 한계로 추가한다.
 
 Figure 9(`fig9_regression_vs_classification.png`)에 네 조합을 나란히
 그렸다.
 
 재현: `python scripts/17_regression_vs_classification.py`,
 `python scripts/18_plot_regression_vs_classification.py`.
+
+### 후속 — CIN 회귀 기반 최소 패널 (한계 6 후속)
+
+위 한계를 직접 확인했다. Elastic Net/Random Forest 회귀로 CIN feature
+selection 을 다시 하고(`run_nested_cv_regression` 재사용, §13 원칙
+동일 — training fold 안에서만 선택), 분류 기반 CIN 10개 패널(Day 11/12)
+과 겹치는 유전자를 비교했다.
+
+**패널 크기별 성능(Spearman rho, 전체 대비 유지율):**
+
+| | 5개 | 10개 | 20개 | 50개 | 전체 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Elastic Net 회귀 | 0.416 (91.8%) | 0.429 (94.6%) | 0.417 (91.9%) | 0.431 (95.1%) | 0.453 |
+| Random Forest 회귀 | 0.396 (81.2%) | 0.406 (83.3%) | 0.439 (90.1%) | 0.463 (95.0%) | 0.488 |
+
+분류 패널(§26④)과 같은 패턴이다 — 대략 10\~20개로 대부분의 성능이
+유지된다.
+
+**분류 패널과 10개 패널 유전자 겹침(Jaccard):**
+
+| | Jaccard | 공통 유전자(10개 중) |
+| --- | ---: | --- |
+| Elastic Net (분류 vs 회귀) | 0.270 | TP53, BRAF, ID3, CREBBP, PIK3CA, RB1, TERT, ASXL1, BAP1, PPP2R1A |
+| Random Forest (분류 vs 회귀) | 0.440 | TP53, BRAF, ID3, CREBBP, PIK3CA, RB1, TERT, ASXL1, KRAS, LRP1B, PDS5B |
+
+완전히 다른 방법(이진 분류 vs 연속 회귀)으로 뽑았는데도 **핵심
+7\~8개(TP53, BRAF, ID3, CREBBP, PIK3CA, RB1, TERT)가 그대로 겹친다** —
+특히 Random Forest 는 Jaccard 0.44 로 fold 간 겹침(0.52, "Day 11/12 RF
+재검증" 절)에 근접한다. 이진화 손실이 있었던 것은 Elastic Net/CIN
+조합뿐이었는데(위 절), 그 조합에서도 패널의 핵심 축 자체는 바뀌지
+않았다 — **"CIN 이진화가 어느 정도 손실을 만들지만, §26③·④ 의 CIN
+패널이 그 손실 때문에 잘못된 유전자를 골랐다는 근거는 아니다"**가
+더 정확한 결론이다. 손실은 판별 성능(ROC-AUC vs rho)에서 나타났지,
+어떤 유전자가 선택되는지에는 크게 반영되지 않았다.
+
+재현: `python scripts/28_cin_regression_panel.py`.
 
 ---
 
@@ -280,6 +314,89 @@ CIN 에서 개선폭이 가장 큰 것도 이 해석과 맞는다 — CIN 은 �
 `python scripts/24_signature_representation.py`,
 `python scripts/25_plot_signature_vs_gene.py`. 참조 게놈은
 `data/reference/`(git 미추적)에 둔다.
+
+### 후속 — signature 최소 패널 (한계 3 후속)
+
+"96개 feature 를 반복 selection·최소 패널 분석에 연결하면 어떻게
+되는가"를 직접 실행했다. 유전자 단위 Day 11/12(§26③④)와 같은 논리를
+96-class 에 적용한다 — 다만 signature 행렬은 fold 와 무관한 고정
+feature 라 `RareMutationFilter` 가 필요 없다. 패널 크기는 5/10/20/30(96
+개 중 절반을 넘지 않도록 유전자 패널의 50 대신 30 을 썼다).
+
+**패널 크기별 성능(ROC-AUC, 전체 96개 대비):**
+
+| | 5개 | 10개 | 20개 | 30개 | 전체(96) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Logistic(L1) / WGD | 0.684 | 0.698 | 0.699 | 0.698 | 0.712 |
+| Logistic(L1) / CIN | 0.663 | 0.680 | 0.681 | 0.693 | 0.701 |
+| Logistic(L1) / LOH | 0.649 | 0.685 | 0.689 | 0.694 | 0.697 |
+| Random Forest / WGD | 0.712 | 0.743 | 0.749 | 0.757 | 0.770 |
+| Random Forest / CIN | 0.689 | 0.733 | 0.755 | 0.757 | 0.762 |
+| Random Forest / LOH | 0.698 | 0.720 | 0.716 | 0.733 | 0.743 |
+
+**20\~30개로 전체(96개) 성능의 95\~99%가 유지된다** — 유전자 단위에서
+"10개로 93\~99% 유지"였던 것(§26④)과 같은 방향이다. 다만 signature 는
+전체가 96개뿐이라 압축비 자체는 유전자 단위(2,000여 개 → 10개)보다
+훨씬 작다.
+
+**패널 안정성(fold 간 Jaccard)은 유전자 단위보다 높다:**
+
+| | 5개 | 10개 | 20개 | 30개 |
+| --- | ---: | ---: | ---: | ---: |
+| Logistic(L1) | 0.42\~0.61 | 0.48\~0.60 | 0.45\~0.52 | 0.49\~0.57 |
+| Random Forest | 0.46\~0.80 | 0.48\~0.74 | 0.57\~0.67 | 0.64\~0.72 |
+
+유전자 단위 10개 패널의 Jaccard(Elastic Net 0.30\~0.41, RF 0.52\~0.61,
+"Day 11/12 RF 재검증" 절)와 비교하면 signature 쪽이 대체로 더 안정적이다
+— 전체 후보가 96개뿐이라 같은 부분집합이 다시 뽑힐 확률 자체가 높다는
+점을 감안해도, 두 모델(Logistic L1, RF) 모두에서 20개 패널 기준
+전 fold(5/5) 공통으로 뽑히는 클래스가 있다.
+
+**모델 간에도 겹치는 signature class:**
+
+| 표현형 | Logistic(L1) ∩ Random Forest (전 fold 공통) |
+| --- | --- |
+| WGD | `C[T>C]G`, `G[C>T]C`, `T[C>A]C`, `T[C>G]A` |
+| CIN | `A[C>T]T`, `C[T>A]T`, `C[T>C]G`, `T[C>A]C`, `T[C>G]A` |
+| LOH | `A[C>T]G`, `T[C>A]C` |
+
+`T[C>A]C`(치환 C>A, context 앞T뒤C)는 세 표현형·두 모델 전부에서
+전 fold 공통으로 뽑힌 유일한 class 다 — 유전자 단위의 `TP53` 같은
+위상의, signature 쪽 "가장 안정적인 단일 신호"로 볼 수 있다.
+
+Figure 13(`fig13_signature_panel_curve.png`)에 패널 곡선을 그렸다.
+
+재현: `python scripts/26_signature_panel.py`,
+`python scripts/29_plot_signature_panel.py`.
+
+### 후속 — seed 재현성 확인 (한계 2 후속)
+
+signature 성능(§4 위 표의 6개 조합)이 outer fold 구성(seed)에 얼마나
+민감한지 봤다. 기본 seed 외 2개(0, 1, 2)를 추가로 돌렸다.
+
+| 모델 | 표현형 | 3-seed 평균 | 표준편차 | 범위 | 원래(기본 seed) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Logistic | WGD | 0.7148 | 0.0006 | 0.0011 | 0.7135 |
+| Logistic | CIN | 0.7146 | 0.0011 | 0.0023 | 0.7106 |
+| Logistic | LOH | 0.6990 | 0.0019 | 0.0035 | 0.6934 |
+| Random Forest | WGD | 0.7624 | 0.0005 | 0.0009 | 0.7705 |
+| Random Forest | CIN | 0.7622 | 0.0024 | 0.0045 | 0.7618 |
+| Random Forest | LOH | 0.7466 | 0.0012 | 0.0024 | 0.7429 |
+
+**seed 간 변동폭이 매우 작다(범위 0.001\~0.005)** — signature 표현의
+ROC-AUC 자체는 fold 구성에 거의 영향받지 않는다. 기본 seed 값은 5개
+조합에서 3-seed 범위 안이거나 근접하고, RF/WGD 만 범위보다 0.008 높은데
+(0.7705 vs 범위 상한 0.7629), 이는 분류 모델의 통상적인 fold 간
+표준편차(§26②, RF 0.019)보다 작아 특별히 이례적인 값은 아니다.
+
+**한계**: 이 실험은 signature 자체의 seed 민감도만 본다. "signature 가
+유전자 단위보다 낫다"는 방향성 비교(§4 위)의 유전자 단위 baseline 은
+seed 를 바꿔 다시 돌리지 않았다 — `RareMutationFilter` 를 포함한 전체
+nested CV 를 seed 마다 재실행하는 비용이 커서 범위 밖으로 뒀다. 즉
+signature 성능 자체의 재현성은 확인됐지만, "5/6 조합에서 개선"이라는
+비교 결과 자체의 seed 재현성까지 확인한 것은 아니다.
+
+재현: `python scripts/27_signature_seed_robustness.py`.
 
 ---
 

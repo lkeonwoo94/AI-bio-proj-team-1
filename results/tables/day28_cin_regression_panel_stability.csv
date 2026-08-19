@@ -1,0 +1,9 @@
+model,panel_size,jaccard
+elastic_net_reg,5,0.6666666666666667
+elastic_net_reg,10,0.4238095238095238
+elastic_net_reg,20,0.300027808676307
+elastic_net_reg,50,0.2720940470111705
+random_forest_reg,5,0.5952380952380952
+random_forest_reg,10,0.4758241758241758
+random_forest_reg,20,0.6098773690078036
+random_forest_reg,50,0.6005223678577724
