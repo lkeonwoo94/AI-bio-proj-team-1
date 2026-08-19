@@ -3,6 +3,9 @@
 DepMap Public 26Q1 / 1,631 세포주 / hotspot 554 + damaging 19,578 feature /
 lineage 32종 / nested CV (outer 5 × inner 5)
 
+본 문서에서 "보완해야 할 점 N번"으로 인용하는 항목은 팀 리뷰 원문
+([2026-08-18/peer-review.md](../2026-08-18/peer-review.md))을 가리킨다.
+
 ---
 
 # §26. 최종 결론에서 답해야 하는 다섯 질문
