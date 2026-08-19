@@ -209,7 +209,8 @@ X 의 값 분포(dtype/min/max/mean/var)는 **1-b 절**에 상세히 정리했�
 1\~4절의 20,132개 유전자 컬럼(`cohort.X`)을 MSigDB Hallmark 5개 +
 KEGG DNA repair 세부 경로 6개, 총 11개 gene set 으로 재집계한 입력이다.
 gene set 목록은 Enrichr 공개 미러에서 받았다(`configs/genesets/pathway_genesets.json`,
-git 추적).
+git 추적) — 정확한 출처(Enrichr 라이브러리명)와 다운로드 방법은
+[`configs/genesets/README.md`](../../configs/genesets/README.md) 참고.
 
 | Gene set | 유전자 수 |
 | --- | ---: |
