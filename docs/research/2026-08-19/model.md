@@ -89,6 +89,17 @@ specificity 가 더 높다. Balanced accuracy(0.715 vs 0.700)는 비슷해도
 않다. Brier(확률 보정)는 세 표현형 모두 signature 쪽이 근소하게
 낮다(더 좋다) — 특히 WGD 는 0.204→0.188.
 
+![Figure 18](../../../results/figures/fig18_sens_spec_tradeoff.png)
+
+Figure 18 에 유전자→signature 이동을 화살표로 그렸다. **WGD·Random
+Forest 의 화살표만 sens=spec 대각선을 가로질러 반대편으로 넘어간다**
+— CIN·LOH 는 두 모델 모두 대각선 아래(sensitivity 우세) 쪽에 머무는
+반면, WGD·RF 만 대각선을 넘어 specificity 우세 쪽으로 이동한다. 표현
+방식 전환이 트레이드오프의 "정도"만 바꾸는 게 아니라 "방향" 자체를
+바꾸는 유일한 조합이라는 뜻이다.
+
+재현: `python scripts/36_plot_sens_spec_tradeoff.py`.
+
 **Random Forest + Signature(96개, CIN) 조합(0.762)이 이 문서 전체를
 통틀어 CIN 에서 가장 높은 ROC-AUC 다** — §1 표의 유전자 단위 5개 모델
 비교(CIN 최고 0.734, Random Forest)보다도 높다. 다만 입력 차원이
