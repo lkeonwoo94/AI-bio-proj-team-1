@@ -8,3 +8,4 @@ seaborn>=0.13
 pyyaml>=6.0
 pytest>=8.0
 catboost>=1.2
+mlflow>=3.0    # 실험 추적 파일럿 (feature/mlflow-tracking-pilot), scripts/37_mlflow_pilot.py 전용

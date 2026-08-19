@@ -14,6 +14,14 @@ data/gdc/*
 data/reference/*
 !data/reference/README.md
 
+# --- MLflow 추적 (파일럿, feature/mlflow-tracking-pilot) ---
+# 실행할 때마다 로컬에 쌓이는 run 데이터. data/ 와 같은 이유로 git에는
+# 안 올린다 — 필요하면 각자 로컬에서 scripts/37_mlflow_pilot.py 를
+# 다시 돌려서 재현한다.
+mlruns/
+mlflow.db
+mlartifacts/
+
 # --- 캐시 ---
 __pycache__/
 *.py[cod]
