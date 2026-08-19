@@ -8,3 +8,4 @@ seaborn>=0.13
 pyyaml>=6.0
 pytest>=8.0
 catboost>=1.2
+dvc>=3.0       # 데이터 버전 관리 파일럿 (feature/dvc-pilot)
