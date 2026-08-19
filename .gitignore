@@ -7,6 +7,9 @@ data/*
 !data/depmap/
 data/depmap/*
 !data/depmap/README.md
+!data/gdc/
+data/gdc/*
+!data/gdc/README.md
 
 # --- 캐시 ---
 __pycache__/

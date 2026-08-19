@@ -1,0 +1,2 @@
+roc_auc,pr_auc,balanced_accuracy,sensitivity,specificity,f1,brier,n_test,positive_rate,threshold,n_common_genes,best_params
+0.5940628714003325,0.44987117203944177,0.5533568577820138,0.2090364725095264,0.8976772430545013,0.30023455824863177,0.22738108675357857,10261,0.3580547704902056,0.574,16245,"{'clf__max_depth': None, 'clf__min_samples_leaf': 5}"

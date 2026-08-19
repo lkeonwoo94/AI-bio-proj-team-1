@@ -13,6 +13,7 @@ https://depmap.org/portal/data_page/ 에서 내려받는다.
 | `OmicsSomaticMutationsMatrixDamaging.csv` | 입력 feature — damaging mutation |
 | `OmicsGlobalSignatures.csv` | 정답 label — WGD / CIN / LOH |
 | `Model.csv` | ModelID, cancer lineage |
+| `OmicsSomaticMutations.csv` | 원시 MAF(Chrom/Pos/Ref/Alt, LikelyLoF/Hotspot 플래그 포함) — mutation signature 실험용(Future Work 2), 용량 큼 |
 
 파일명이 릴리스에 따라 다를 수 있으므로, 실제 받은 이름은
 `configs/data.yaml` 의 `files` 항목에 반영한다.

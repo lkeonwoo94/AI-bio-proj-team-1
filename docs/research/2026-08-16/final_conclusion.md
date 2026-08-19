@@ -842,3 +842,51 @@ DepMap 과 겹치는 세포주를 **독자적인 mutation calling 파이프라�
 검증하려면 ②(TCGA)를 받는다. MC3 MAF 는 공개 API 로 승인 없이 바로
 받을 수 있고 용량도 크지 않다(수백 MB). ③은 ①②를 먼저 마친 뒤
 여유가 있을 때 시도한다.
+
+#### 실행 결과 — ②(TCGA) WGD 외부 검증
+
+`mc3.v0.2.8.PUBLIC.maf.gz`(753MB)와 ABSOLUTE ploidy/WGD 결과
+(`TCGA_mastercalls.abs_tables_JSedit.fixed.txt`)를 받아 실행했다.
+CIN/LOH 대응 지표(Taylor et al. 2018 supplementary table)는 페이월로
+정확한 테이블 번호를 확인하지 못해 **WGD 만** 검증했다.
+
+**barcode 매핑 함정**: ABSOLUTE 와 MC3 는 서로 다른 시퀀싱 플레이트/
+센터에서 만들어져 전체 barcode 로 join 하면 10,642개 중 12개만
+매칭된다. TCGA 데이터 종류 간 병합의 표준 관례대로 앞 15자(참가자+
+샘플타입)로 잘라서 맞추면 91%(9,651\~10,261개)가 매칭된다.
+
+**설계**: hotspot 에 대응하는 TCGA 데이터가 없어(큐레이션 hotspot DB
+필요, §7 논의와 같은 이유) damaging feature 만으로 비교했다. DepMap 의
+`LikelyLoF` 판정을 표준 truncating variant class(frameshift/nonsense/
+splice site/start loss/stop loss)로 근사했다. 공통 유전자는 16,245개
+(DepMap 19,578, TCGA 18,948 중 교집합).
+
+| 단계 | ROC-AUC | n |
+| --- | ---: | ---: |
+| DepMap 내부(damaging-only, random 5-fold) | 0.762 | 1,631 |
+| **TCGA 외부 검증**(DepMap 전체로 학습 → TCGA 예측) | **0.594** | 10,261 |
+
+무작위 수준(0.5)은 넘지만 **내부 대비 크게 떨어진다(−0.168)**(Figure 11).
+
+**다만 이 하락폭을 그대로 "일반화 실패"로 읽으면 안 된다.** TP53
+damaging(근사) 비율이 DepMap 57.8% vs TCGA 12.4% 로 코호트 간 격차가
+매우 크다. 원인을 추적해보니 **방법론적 문제였다** — TCGA MAF 에서
+TP53 은 missense 변이가 2,927건으로 압도적인데, truncating-only 근사
+기준은 이를 전혀 잡지 못하고 nonsense/frameshift/splice 계열 1,448건만
+포착한다. TP53 은 우성음성(dominant-negative) 기전의 missense 돌연변이가
+주된 불활성화 경로인 대표적 유전자라, 이 근사가 **가장 중요한 단일
+유전자의 신호를 3분의 2 가까이 놓친 것**이다(Figure 11b).
+
+**결론**: TCGA 외부 검증 ROC-AUC 0.594 는 실제 일반화 성능의 **하한
+추정치에 가깝다** — 진짜 값은 이보다 높을 가능성이 크지만, missense
+pathogenicity 를 제대로 반영하는 분류기(예: PolyPhen/SIFT/REVEL 점수
+활용) 없이는 정확한 값을 알 수 없다. 그럼에도 **내부(0.762)와 완전히
+같은 수준일 가능성은 낮다** — 세포주와 실제 종양은 순도(purity),
+이질성(heterogeneity), 배양 조건에 따른 선택압이 다르므로 어느 정도의
+일반화 격차는 예상된 결과다. "세포주에서 배운 신호가 실제 환자
+종양에도 어느 정도(무작위보다는 뚜렷이 높게) 옮겨가지만 완전히
+같지는 않다"가 현재 근거로 뒷받침되는 가장 정확한 서술이다.
+
+재현: `python scripts/21_tcga_validation.py`,
+`python scripts/22_plot_tcga_validation.py`. 원본 데이터는
+`data/gdc/`(git 미추적, `data/depmap/` 과 같은 방식)에 둔다.
