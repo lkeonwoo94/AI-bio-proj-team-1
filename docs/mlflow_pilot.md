@@ -48,15 +48,25 @@ uv pip install "numpy==1.26.4" "pandas==2.2.3" xgboost catboost \
 .venv/bin/python scripts/37_mlflow_pilot.py
 .venv/bin/python scripts/37_mlflow_pilot.py --targets wgd cin loh   # 전체
 
-# UI 로 확인 (http://127.0.0.1:5000)
-.venv/bin/mlflow ui --backend-store-uri sqlite:///mlflow.db
+# UI 로 확인 (http://127.0.0.1:5000) — .venv 를 건드리지 않는 uvx 로 실행
+uvx --from mlflow mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
-`mlflow-skinny` 라는 이름과 달리 `mlflow ui` 서버 실행에 필요한
-`fastapi`/`starlette`/`uvicorn` 이 기본 의존성에 포함돼 있어, 별도로
-full `mlflow` 를 설치하지 않아도 UI 가 그대로 뜬다(직접 확인함,
-`curl` 로 200 응답 확인) — `sklearn`/`skops` 처럼 모델 로깅용 무거운
-의존성만 skinny 에서 빠진다.
+**정정**: 처음에는 `mlflow-skinny` 에 `fastapi`/`starlette`/`uvicorn`
+이 포함돼 있어 `.venv/bin/mlflow ui` 로도 UI 가 뜬다고 적었는데, 틀렸다.
+`curl` 로 HTTP 200 을 받긴 했지만 **그 응답 본문이 실제 UI 가 아니라
+"landing page (index.html) not found" 에러 페이지**였다(상태 코드만
+확인하고 내용을 안 봐서 놓쳤다). `mlflow-skinny` 는 UI 정적 파일
+(`index.html`, JS/CSS 번들)을 아예 포함하지 않는다 — 그건 full
+`mlflow` 패키지에만 들어있다.
+
+**해결책**: full `mlflow` 를 실험용 `.venv` 에 바로 설치하면 앞서 겪은
+것과 같은 이유로 `sklearn`/`pandas` 버전이 다시 드리프트될 위험이
+있다. 대신 `uvx --from mlflow mlflow ui ...` 로 **완전히 격리된 임시
+환경**에서 UI 서버만 띄운다 — `.venv` 는 전혀 안 건드리고, 매번 실행할
+때마다 uv 캐시에서 즉시 재사용된다(최초 1회만 다운로드). `curl` 로
+응답 본문에 `<title>MLflow</title>` 와 JS 번들 참조가 있는지까지
+확인해서 이번엔 진짜로 검증했다.
 
 `torch`(multi-task ANN 용)는 기본으로 설치하지 않았다 — CUDA 관련
 nvidia 패키지를 대량으로 끌고 오고(수백MB\~1GB대), numpy 버전 요구
@@ -83,6 +93,39 @@ tracking 데이터는 `mlflow.db`(SQLite, run/metric/param) 와 `mlruns/`
 * feature importance(`day07_aggregate_selection.py` 산출물과 같은
   내용)가 CSV artifact 로 parent run 에 붙어, run 하나만 열어도
   성능·하이퍼파라미터·feature importance 를 한번에 볼 수 있다.
+* 나머지 4개 모델(Logistic, Elastic Net, XGBoost, CatBoost)도 3개
+  표현형 전부 돌려 총 **15개 parent run**(5모델×3표현형)을 채웠다 —
+  모든 조합의 `mean_roc_auc` 가 `day10_model_comparison.csv` 와
+  소수점 셋째 자리까지 정확히 일치했다.
+
+### 대시보드 꾸미기
+
+기본 실행 상태는 run 이름이 모델명뿐이라(`random_forest`) 목록이
+길어지면 구분하기 어렵다. `mlflow.tracking.MlflowClient()` 로 기존
+15개 run 을 다음과 같이 정리했다(재계산 없이 메타데이터만 갱신 —
+`update_run`/`set_tag` 는 이미 기록된 run 에도 적용된다):
+
+* run 이름을 `{model}_{target}`(예: `random_forest_wgd`)로 변경,
+  fold child run 은 `{model}_{target}_fold{N}` 으로.
+* 태그 추가: `representation`(gene/pathway/signature 구분용, 지금은
+  `gene` 뿐), `target_label`(WGD/CIN/LOH), `model_label`(사람이 읽는
+  이름), `model_family`(linear/tree — UI 필터·색상 구분용).
+* `mlflow.note.content` 태그로 run 설명 추가 — MLflow UI 가 이 태그를
+  자동으로 "Description" 칸에 보여준다.
+
+앞으로 새로 실행하는 run(`scripts/37_mlflow_pilot.py`)은 처음부터
+이 이름·태그를 달고 기록되도록 스크립트 자체를 고쳤다.
+
+**대시보드 스냅샷** — 헤드리스 환경이라 `mlflow ui` 화면을 직접
+스크린샷할 수 없어서, 같은 데이터를 `MlflowClient().search_runs()`
+로 쿼리해 그림으로 재현하는 스크립트(`scripts/38_plot_mlflow_dashboard.py`)
+를 만들었다. CSV 를 다시 읽는 게 아니라 **MLflow 저장소에 실제로
+기록된 15개 run 에서** ROC-AUC/Balanced Accuracy/Brier 를 가져와
+그린다 — MLflow 가 진짜 정답 소스가 됐다는 것을 보여주는 그림이다.
+
+```bash
+.venv/bin/python scripts/38_plot_mlflow_dashboard.py --out /path/to/snapshot.png
+```
 
 ## 겪은 문제
 
