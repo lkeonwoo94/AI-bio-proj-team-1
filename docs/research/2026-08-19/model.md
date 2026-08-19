@@ -66,6 +66,29 @@ Forest)만 비교했다(08-19 additional_results.md §4).
 | LOH | Logistic | 0.683 | 0.693 | +0.010 |
 | LOH | Random Forest | 0.730 | 0.743 | +0.013 |
 
+§1의 유전자 단위 표와 같은 형식으로 나머지 지표까지 상세히 보면
+(`day24_signature_summary.csv`, random 5-fold 평균):
+
+| 표현형 | 모델 | ROC-AUC | PR-AUC | Balanced Acc | Sensitivity | Specificity | F1 | Brier |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| WGD | Logistic | 0.713 | 0.802 | 0.655 | 0.695 | 0.616 | 0.729 | 0.212 |
+| WGD | Random Forest | 0.770 | 0.857 | 0.700 | 0.636 | 0.764 | 0.720 | 0.188 |
+| CIN | Logistic | 0.711 | 0.682 | 0.657 | 0.705 | 0.609 | 0.670 | 0.216 |
+| CIN | Random Forest | 0.762 | 0.750 | 0.695 | 0.707 | 0.682 | 0.698 | 0.203 |
+| LOH | Logistic | 0.693 | 0.681 | 0.626 | 0.711 | 0.541 | 0.655 | 0.222 |
+| LOH | Random Forest | 0.743 | 0.741 | 0.678 | 0.697 | 0.659 | 0.684 | 0.209 |
+
+§1(유전자 단위)의 Random Forest 행과 나란히 놓고 보면 흥미로운 지점이
+있다. **WGD 는 sensitivity/specificity 의 균형이 크게 달라진다** —
+유전자 단위(sens 0.752 / spec 0.677)는 sensitivity 가 높은 쪽으로
+치우쳐 있는데, signature 단위(sens 0.636 / spec 0.764)는 정반대로
+specificity 가 더 높다. Balanced accuracy(0.715 vs 0.700)는 비슷해도
+**어느 쪽 오류를 더 허용하는지가 표현 방식에 따라 달라진다**는 뜻이다
+— 확정 배포 전에는 이 트레이드오프 자체도 확인해야 한다. CIN·LOH 는
+두 표현 사이에 sensitivity/specificity 균형 차이가 WGD 만큼 크지
+않다. Brier(확률 보정)는 세 표현형 모두 signature 쪽이 근소하게
+낮다(더 좋다) — 특히 WGD 는 0.204→0.188.
+
 **Random Forest + Signature(96개, CIN) 조합(0.762)이 이 문서 전체를
 통틀어 CIN 에서 가장 높은 ROC-AUC 다** — §1 표의 유전자 단위 5개 모델
 비교(CIN 최고 0.734, Random Forest)보다도 높다. 다만 입력 차원이
