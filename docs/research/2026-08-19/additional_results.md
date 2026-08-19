@@ -197,7 +197,11 @@ selection 을 다시 하고(`run_nested_cv_regression` 재사용, §13 원칙
 더 정확한 결론이다. 손실은 판별 성능(ROC-AUC vs rho)에서 나타났지,
 어떤 유전자가 선택되는지에는 크게 반영되지 않았다.
 
-재현: `python scripts/28_cin_regression_panel.py`.
+Figure 14(`fig14_cin_regression_panel.png`)에 패널 곡선과 겹침 비교를
+그렸다.
+
+재현: `python scripts/28_cin_regression_panel.py`,
+`python scripts/30_plot_cin_regression_panel.py`.
 
 ---
 
@@ -396,7 +400,11 @@ nested CV 를 seed 마다 재실행하는 비용이 커서 범위 밖으로 뒀�
 signature 성능 자체의 재현성은 확인됐지만, "5/6 조합에서 개선"이라는
 비교 결과 자체의 seed 재현성까지 확인한 것은 아니다.
 
-재현: `python scripts/27_signature_seed_robustness.py`.
+Figure 15(`fig15_signature_seed_robustness.png`)에 3-seed 산포와 기본
+seed 값을 함께 그렸다.
+
+재현: `python scripts/27_signature_seed_robustness.py`,
+`python scripts/31_plot_signature_seed_robustness.py`.
 
 ---
 
