@@ -49,6 +49,35 @@ Forest 의 confusion matrix 를 정리한다. 원 데이터·근거는
 
 재현: `python scripts/06_compare_models.py`.
 
+### 참고 — Mutation signature(96-class) 표현으로 다시 본 성능
+
+위 표는 전부 **유전자 단위**(필터 후 \~2,062개 feature) 입력 기준이다.
+같은 random 5-fold 조건에서 입력을 유전자 대신
+**mutation signature(96-class, 08-19 Future Work 실행분)** 로 바꾸면
+어떻게 달라지는지 참고로 덧붙인다 — 모델은 두 개(Logistic, Random
+Forest)만 비교했다(08-19 additional_results.md §4).
+
+| 표현형 | 모델 | 유전자 단위 ROC-AUC | Signature(96개) ROC-AUC | 차이 |
+| --- | --- | ---: | ---: | ---: |
+| WGD | Logistic | 0.723 | 0.713 | -0.010 |
+| WGD | Random Forest | 0.765 | 0.770 | **+0.005** |
+| CIN | Logistic | 0.672 | 0.711 | **+0.039** |
+| CIN | Random Forest | 0.734 | 0.762 | **+0.028** |
+| LOH | Logistic | 0.683 | 0.693 | +0.010 |
+| LOH | Random Forest | 0.730 | 0.743 | +0.013 |
+
+**Random Forest + Signature(96개, CIN) 조합(0.762)이 이 문서 전체를
+통틀어 CIN 에서 가장 높은 ROC-AUC 다** — §1 표의 유전자 단위 5개 모델
+비교(CIN 최고 0.734, Random Forest)보다도 높다. 다만 입력 차원이
+전혀 다르고(2,062개 유전자 vs 96개 signature class), 5개 모델 전부와
+비교한 것도 아니라서 "§1 모델 비교표"에 그대로 합쳐 넣지는 않았다 —
+**"어떤 모델이 최고인가"와 "어떤 입력 표현이 최고인가"는 서로 다른
+축의 질문**이라는 점을 분명히 하기 위해서다. 유전자 단위와 signature
+를 같은 nested CV 안에서 함께 feature selection 시킨 결합 실험은
+`biomarker_panel.md` 에 별도로 정리할 예정이다(진행 중).
+
+재현: `python scripts/24_signature_representation.py`.
+
 ---
 
 ## 2. Random Forest confusion matrix (최고 성능 모델)
