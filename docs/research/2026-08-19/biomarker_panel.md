@@ -31,17 +31,17 @@
 
 ## 2. 근거표 — fold·모델·selection 방법을 넘어 몇 번이나 재확인됐는가
 
-| 유전자 | fold 반복 (EN/RF, "Day 11/12 RF 재검증") | CIN 회귀 재확인 | TCGA 외부 지지 | 비고 |
-| --- | ---: | :---: | :---: | --- |
-| `TP53`(damaging) | 1.00 / 1.00 | ✅ | △ (하한추정치, missense 근사 한계) | 세 표현형 전부 평균 순위 1위 |
-| `TP53`(hotspot) | 0.60 / 1.00 | — | — | |
-| `ID3` | 1.00 / 1.00 | ✅ | — | |
-| `BRAF`(hotspot) | 1.00 / 1.00 | ✅ | — | |
-| `CREBBP` | 0.93 / 1.00 | ✅ | — | WGD·LOH 5/5, CIN 4/5(EN 기준) |
-| `RB1` | 0.80 / 1.00 | ✅ | — | CIN 특이(§26③) |
-| `TERT`(hotspot) | 0.67 / 0.87 | ✅ | — | WGD 특이(§26③), CIN 회귀에서도 재확인 |
-| `PITX1` | 0.67 / 0.93 | — (CIN 회귀만 검증, LOH 회귀는 안 함) | — | LOH 특이(§26③) |
-| `PIK3CA`(hotspot) | * | ✅ | — | CIN 특이(§26③) — EN 단독 fold 선택에서는 5/5였으나 8-gene 모델합의표엔 없음, 이번 회차 CIN 회귀로 cross-model 근거 보강 |
+| 유전자 | fold 반복 (EN/RF, "Day 11/12 RF 재검증") | RF 설명력 %(WGD / CIN / LOH) | CIN 회귀 재확인 | TCGA 외부 지지 | 비고 |
+| --- | ---: | ---: | :---: | :---: | --- |
+| `TP53`(damaging) | 1.00 / 1.00 | **15.3% / 14.1% / 14.4%** | ✅ | △ (하한추정치, missense 근사 한계) | 세 표현형 전부 평균 순위 1위 |
+| `TP53`(hotspot) | 0.60 / 1.00 | 9.4% / 7.7% / 7.5% | — | — | |
+| `ID3` | 1.00 / 1.00 | 1.6% / 1.6% / 1.5% | ✅ | — | |
+| `BRAF`(hotspot) | 1.00 / 1.00 | 2.8% / 1.6% / 0.8% | ✅ | — | |
+| `CREBBP` | 0.93 / 1.00 | 0.9% / 0.9% / 0.7% | ✅ | — | WGD·LOH 5/5, CIN 4/5(EN 기준) |
+| `RB1` | 0.80 / 1.00 | 1.0% / 1.8% / 1.7% | ✅ | — | CIN 특이(§26③) |
+| `TERT`(hotspot) | 0.67 / 0.87 | 3.2% / 1.9% / 0.3% | ✅ | — | WGD 특이(§26③), CIN 회귀에서도 재확인 |
+| `PITX1` | 0.67 / 0.93 | 0.5% / 0.7% / 0.9% | — (CIN 회귀만 검증, LOH 회귀는 안 함) | — | LOH 특이(§26③) |
+| `PIK3CA`(hotspot) | * | 0.4% / 1.0% / 0.2% | ✅ | — | CIN 특이(§26③) — EN 단독 fold 선택에서는 5/5였으나 8-gene 모델합의표엔 없음, 이번 회차 CIN 회귀로 cross-model 근거 보강 |
 
 \* `PIK3CA` 는 원래 Elastic Net 단독 CIN 특이 유전자(§26③, fold 선택빈도
 1.0)로 확인됐고, "모델 간 합의" 8-gene 표(EN·RF 분류만 비교)에는
@@ -49,6 +49,20 @@
 에서 재확인되어 분류-회귀 두 방법을 넘는 근거를 추가로 확보했다 —
 자세한 내용은
 [additional_results.md §2 후속](additional_results.md#후속--cin-회귀-기반-최소-패널-한계-6-후속).
+
+**"RF 설명력 %"** 열은 Random Forest 의 impurity-based feature
+importance(`feature_importances_`, 표현형별 outer 5-fold 평균)로,
+한 fold 안에서 전체 feature(필터 통과 후 \~1,200\~1,700개)의 importance
+합이 100%가 되도록 정규화된 값이다(`scripts/07_aggregate_selection.py`
+가 저장한 `day11_selection_random_forest_{target}.csv` 의
+`mean_importance` 컬럼, "Day 11/12 Random Forest 재검증" 절과 같은
+산출물). `TP53`(damaging+hotspot) 둘이 합쳐 세 표현형 모두 20% 대를
+차지해 압도적이고, 그다음 유전자부터는 급격히 줄어 1\~3%대에서
+서로 촘촘히 몰린다 — "Day 11/12 RF 재검증"의 "① importance 가 상위
+소수에만 집중되고 나머지는 완만한 꼬리를 이룬다"는 관찰과 정확히
+일치한다. 즉 **핵심 축(TP53) 하나가 나머지 7개를 합친 것보다도 큰
+설명력을 갖고, 나머지는 "그 다음으로 반복 재현되는" 수준이지
+개별적으로 TP53 에 필적하는 설명력을 갖는 것은 아니다.**
 
 **"CIN 회귀 재확인"** 열은 08-19 이번 회차에 실행한 CIN 회귀 기반
 패널(`scripts/28_cin_regression_panel.py`)의 10개 패널에 그 유전자가
