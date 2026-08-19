@@ -45,6 +45,10 @@ def main() -> int:
     ax.bar(x - width, gene_v, width, label="유전자만", color="#bfbfbf")
     ax.bar(x, sig_v, width, label="Signature만", color="#8faadc")
     ax.bar(x + width, combined_v, width, label="결합", color="#c0504d")
+    for i, gv in enumerate(gene_v):
+        ax.text(i - width, gv + 0.008, f"{gv:.3f}", ha="center", fontsize=8)
+    for i, sv in enumerate(sig_v):
+        ax.text(i, sv + 0.008, f"{sv:.3f}", ha="center", fontsize=8)
     for i, cv in enumerate(combined_v):
         ax.text(i + width, cv + 0.008, f"{cv:.3f}", ha="center", fontsize=8)
     ax.set_xticks(x)
