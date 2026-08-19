@@ -773,7 +773,7 @@ DNA Repair 경로 안 mutation 비율"이 되어 나머지 100여 개 약한 신
 재현: `python scripts/19_pathway_representation.py`,
 `python scripts/20_plot_pathway_vs_gene.py`.
 
-### 2. Mutation signature — 원시 MAF 파일 확보 (확장 과제)
+### 2. ~~Mutation signature~~ **[실행 완료 — 양성 결과, pathway 와 정반대]**
 
 **무엇을**: DepMap 이 별도로 배포하는 `OmicsSomaticMutations.csv`
 (MAF-like, `Chrom`/`Pos`/`Ref`/`Alt` 컬럼 포함) 또는
@@ -797,6 +797,55 @@ signature 추출(예: `SigProfilerExtractor`, `deconstructSigs`) 을 별도로
 **예상 소요**: 1번보다 크다 — 대용량 파일 처리와 signature 추출 도구 도입이
 새로 필요하다. **1번(pathway)을 먼저 시도해 sparsity 완화만으로 천장이
 뚫리는지 확인한 뒤, 뚫리지 않을 경우에 착수하는 순서를 권장한다.**
+
+**실행 결과**: `OmicsSomaticMutations.csv`(원시 MAF, 1,172,689행)를
+받아 default 프로파일의 SNV 644,520건을 추렸다. SigProfilerExtractor
+같은 무거운 signature 추출 도구는 쓰지 않고, hg38 참조 게놈(UCSC
+2bit, 796MB)에서 변이 위치의 앞뒤 염기를 직접 읽어 COSMIC SBS 표준
+96-class(치환 6종 × context 16종)로 분류한 뒤, 세포주별 비율 행렬(1,631
+× 96)을 만들었다 — NMF 기반 signature 분해 없이 원시 96-class 분포
+자체를 feature 로 썼다.
+
+이 계산은 fold 와 무관한 고정 매핑(참조 게놈 서열)이라 pathway 매핑과
+같은 이유로 §13 누출 위험이 없다. 유전자 단위(필터 후 \~2,062개)와 같은
+random 5-fold 조건에서 비교했다(Figure 12).
+
+| 표현형 | 모델 | 유전자 단위 | Signature(96개) | 차이 |
+| --- | --- | ---: | ---: | ---: |
+| WGD | Logistic | 0.723 | 0.713 | -0.010 |
+| CIN | Logistic | 0.672 | 0.711 | **+0.039** |
+| LOH | Logistic | 0.683 | 0.693 | +0.010 |
+| WGD | Random Forest | 0.765 | 0.770 | +0.005 |
+| CIN | Random Forest | 0.734 | 0.762 | **+0.028** |
+| LOH | Random Forest | 0.730 | 0.743 | +0.013 |
+
+**6개 조합 중 5개가 개선됐다 — pathway 실험과 정반대다.** WGD/Logistic
+한 조합만 소폭 하락(-0.010)이고, 나머지는 전부 양수, 특히 CIN 에서
+뚜렷하다(+0.028\~+0.039). **96개라는 훨씬 적은 feature 수로 유전자
+\~2,062개 수준의 성능을 냈다는 점이 핵심이다.**
+
+pathway 집계가 실패한 것과 signature 가 성공한 것을 나란히 놓으면
+이유가 분명해진다 — pathway 는 유전자 정체성 축(TP53 이 어떤 경로에
+속하는가)을 뭉개서 정보를 잃었지만, signature 는 애초에 **다른 축의
+정보**(어떤 변이 발생 과정이 이 세포주를 지배했는가 — 예: APOBEC
+활성, mismatch repair 결손, 자외선 손상)를 담고 있다. 이 과정들은
+유전체 불안정성과 기전적으로 연결되어 있어(예: MMR 결손은 그 자체로
+불안정성의 원인) 유전자 단위 신호에 없던 것을 보탠 것으로 보인다.
+CIN 에서 개선폭이 가장 큰 것도 이 해석과 맞는다 — CIN 은 애초에
+"어떤 과정으로 염색체가 불안정해졌는가"라는 질문과 가장 가깝다.
+
+**한계**: (1) NMF 기반 정식 SBS signature exposure(COSMIC 카탈로그
+대비 분해)가 아니라 원시 96-class 분포다 — 더 정교한 분해를 거치면
+추가로 개선될 수도 있다. (2) 6개 조합 중 5개라는 표본이 작아 우연의
+여지가 있다 — 다른 seed·fold 구성에서도 재현되는지는 확인하지 않았다.
+(3) 이 96개 feature 를 §26③·④ 의 반복 selection·최소 패널 분석에
+아직 연결하지 않았다 — "패널에 signature feature 를 섞으면 더
+나아지는가"는 열린 질문으로 남는다.
+
+재현: `python scripts/23_build_mutation_signature.py`,
+`python scripts/24_signature_representation.py`,
+`python scripts/25_plot_signature_vs_gene.py`. 참조 게놈은
+`data/reference/`(git 미추적)에 둔다.
 
 ### 3. 독립 코호트 검증 — 한계 6번(§26⑤, "이 결론의 한계") 후속
 
