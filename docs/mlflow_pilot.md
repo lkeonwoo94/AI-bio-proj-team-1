@@ -26,11 +26,23 @@
 * experiment: `"{target}_{representation}"` (예: `wgd_gene`)
 * run: parent = 모델명, child = `fold{N}` (outer 5-fold 를 nested run 으로)
 
-## 실행
+## 실행 — 가상환경은 `uv` 로 구성
+
+시스템 Python(Kali)은 PEP 668 로 pip 설치 자체가 막혀 있어, `uv` 로
+`.venv/` 를 만들고 그 안에만 설치한다. **`--system-site-packages` 를
+반드시 켠다** — apt 로 이미 깔려 있는 `pandas`(2.2.3+dfsg),
+`scikit-learn`(1.4.2+dfsg) 를 그대로 재사용하기 위해서다. 이게 왜
+중요한지는 아래 "겪은 문제" 참고.
 
 ```bash
-# 최초 1회 — mlflow 는 .venv 에만 설치돼 있다(시스템 pip 는 PEP 668 로 막혀 있음)
-.venv/bin/pip install mlflow
+# 최초 1회 — venv 생성 + mlflow-skinny 설치
+uv venv .venv --system-site-packages --python 3.13
+uv pip install mlflow-skinny --python .venv/bin/python
+
+# xgboost/catboost 도 필요하면(다른 스크립트용) numpy/pandas 를 명시적으로
+# 고정해서 같이 설치 — 안 고정하면 uv 가 최신 numpy/pandas 를 새로 받는다.
+uv pip install "numpy==1.26.4" "pandas==2.2.3" xgboost catboost \
+  --python .venv/bin/python
 
 # 파일럿 실행 (기본: WGD만, Random Forest)
 .venv/bin/python scripts/37_mlflow_pilot.py
@@ -39,6 +51,18 @@
 # UI 로 확인 (http://127.0.0.1:5000)
 .venv/bin/mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
+
+`mlflow-skinny` 라는 이름과 달리 `mlflow ui` 서버 실행에 필요한
+`fastapi`/`starlette`/`uvicorn` 이 기본 의존성에 포함돼 있어, 별도로
+full `mlflow` 를 설치하지 않아도 UI 가 그대로 뜬다(직접 확인함,
+`curl` 로 200 응답 확인) — `sklearn`/`skops` 처럼 모델 로깅용 무거운
+의존성만 skinny 에서 빠진다.
+
+`torch`(multi-task ANN 용)는 기본으로 설치하지 않았다 — CUDA 관련
+nvidia 패키지를 대량으로 끌고 오고(수백MB\~1GB대), numpy 버전 요구
+사항이 까다로워 실제로 pandas/numpy 를 강제로 새 버전으로 올리는
+원인이 됐다(아래 참고). 필요하면 `numpy`/`pandas` 를 먼저 고정한 뒤
+`uv pip install torch --python .venv/bin/python` 로 따로 시도한다.
 
 tracking 데이터는 `mlflow.db`(SQLite, run/metric/param) 와 `mlruns/`
 (artifact — CSV 등)에 로컬로 쌓인다. 둘 다 `.gitignore` 에 등록돼 있다
@@ -60,17 +84,43 @@ tracking 데이터는 `mlflow.db`(SQLite, run/metric/param) 와 `mlruns/`
   내용)가 CSV artifact 로 parent run 에 붙어, run 하나만 열어도
   성능·하이퍼파라미터·feature importance 를 한번에 볼 수 있다.
 
-## 한 걸음 겪은 문제
+## 겪은 문제
 
 * MLflow 3.x 부터 순수 파일 기반 backend(`file:./mlruns`)가
   maintenance mode 로 바뀌어 새 run 기록 시 예외를 던진다. SQLite
   backend(`sqlite:///mlflow.db`)로 바꿔 해결했다 — 서버 세팅이 필요
   없다는 장점은 그대로 유지된다.
 * 시스템 Python 은 Kali 의 externally-managed 정책(PEP 668)으로 pip
-  설치가 막혀 있어, 프로젝트에 이미 있는 `.venv/`(system-site-packages
-  옵션으로 만들어짐)에 설치했다. 앞으로 이 파일럿을 확장하려면
-  `.venv/bin/python` 으로 실행해야 한다(시스템 `python` 에는 mlflow 가
-  없다).
+  설치가 막혀 있어, `.venv/`(system-site-packages 옵션)에 설치했다.
+  앞으로 이 파일럿을 실행하려면 `.venv/bin/python` 을 써야 한다.
+* **`uv pip install -r requirements.txt` 를 그대로 돌리면 위험하다.**
+  `--system-site-packages` 로 만든 venv 라도, `uv` 는 이미 apt 로 깔려
+  있는 `pandas`(2.2.3)/`scikit-learn`(1.4.2) 를 무시하고 PyPI 최신
+  버전(`pandas==3.0.5`, `scikit-learn==1.9.0`)을 새로 받아 venv 안에
+  덮어썼다 — 게다가 `torch` 의존성 때문에 CUDA 관련 nvidia 패키지까지
+  줄줄이 딸려와 venv 가 5.2GB 까지 불어났다. 이 프로젝트의 모든 결과는
+  `scikit-learn 1.4.2` 기준으로 재현성을 검증해왔기 때문에(예:
+  `RandomForestClassifier` 의 기본 동작이 버전마다 달라질 수 있음),
+  이 상태로 실험을 돌리면 지금까지의 수치와 미묘하게 달라질 위험이
+  있었다.
+  실제로 이 문제를 만들면서 **기존에 있던 `.venv/`(752MB, 원래
+  pandas/sklearn 은 apt 버전과 같았고 xgboost/catboost/torch 도 이미
+  설치돼 있었음)를 실수로 삭제**했다 — 정확히 어떤 버전이 들어있었는지
+  기록해두지 않은 채로. 복구는 다음 순서로 했다:
+  1. `mlflow-skinny`(사용하지 않는 `sklearn`/`skops` 등 안 끌고 옴)만
+     따로 설치해 pandas/sklearn 버전을 건드리지 않는 것을 확인.
+  2. `xgboost`/`catboost` 는 `numpy==1.26.4`/`pandas==2.2.3` 를 **명시적으로
+     고정**한 채 설치해 버전 드리프트를 막았다.
+  3. 파일럿 스크립트를 다시 돌려 fold 별 ROC-AUC(0.800/0.785/0.719/
+     0.803/0.719, 평균 0.765)가 삭제 전과 **정확히 같다**는 것으로
+     `pandas`/`scikit-learn` 버전이 원래대로 돌아왔음을 재확인했다.
+  4. `torch` 는 복구하지 않았다(위 참고) — multi-task ANN 스크립트를
+     쓸 일이 있으면 그때 numpy/pandas 를 고정한 채로 따로 설치한다.
+
+  **교훈**: `uv` 로 기존 apt 기반 환경을 다루는 프로젝트에서는 절대
+  `uv pip install -r requirements.txt` 를 통째로 돌리지 말고, 새로
+  필요한 패키지만 골라서(가능하면 numpy/pandas/scikit-learn 버전을
+  명시적으로 고정하고) 설치해야 한다.
 
 ## 다음 결정
 
