@@ -5,7 +5,9 @@
 유효하다. 이 문서는 그 이후 진행한 다섯 개 실험(암종별 편차 후속 검정,
 CIN/LOH 회귀 검증, Pathway/Signature/TCGA — Future Work 실행)의 결과를
 반영해 결론을 갱신한다. 상세 데이터·표·해석은
-[additional_results.md](additional_results.md) 를 참고한다.
+[additional_results.md](additional_results.md) 를 참고한다. 이 모든
+근거를 종합한 최종 후보 유전자 목록은
+[biomarker_panel.md](biomarker_panel.md) 에 정리했다.
 
 ---
 
