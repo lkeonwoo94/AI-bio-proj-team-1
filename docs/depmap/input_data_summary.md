@@ -201,3 +201,88 @@ row 2,154 / col 49
 X 의 값 분포(dtype/min/max/mean/var)는 **1-b 절**에 상세히 정리했다.
 자세한 병합 과정은 `docs/depmap/mutation_matrix.md` 와
 `src/data/merge.py` 참고.
+
+---
+
+## 5. Pathway 재집계 입력 (`docs/research/2026-08-19/additional_results.md` §3)
+
+1\~4절의 20,132개 유전자 컬럼(`cohort.X`)을 MSigDB Hallmark 5개 +
+KEGG DNA repair 세부 경로 6개, 총 11개 gene set 으로 재집계한 입력이다.
+gene set 목록은 Enrichr 공개 미러에서 받았다(`configs/genesets/pathway_genesets.json`,
+git 추적).
+
+| Gene set | 유전자 수 |
+| --- | ---: |
+| HALLMARK_G2-M_Checkpoint | 200 |
+| HALLMARK_E2F_Targets | 200 |
+| HALLMARK_p53_Pathway | 200 |
+| HALLMARK_Mitotic_Spindle | 199 |
+| HALLMARK_DNA_Repair | 150 |
+| KEGG_Fanconi_anemia_pathway | 54 |
+| KEGG_Nucleotide_excision_repair | 47 |
+| KEGG_Homologous_recombination | 41 |
+| KEGG_Base_excision_repair | 33 |
+| KEGG_Mismatch_repair | 23 |
+| KEGG_Non-homologous_end-joining | 13 |
+
+11개 gene set × hotspot/damaging 2종 = **22개 pathway feature** (11개
+전부 hotspot·damaging 양쪽에 매칭되는 유전자가 있어 22개가 그대로
+유지됨, `PathwayAggregator.fit()` 이 유전자가 하나도 안 걸리는 조합은
+자동으로 제외한다). 각 feature 값은 "그 세포주가 mutation 을 가진,
+그 pathway 소속 유전자 수 / 데이터에 존재하는 pathway 소속 유전자 수"
+비율이다 — 유전자 20,132개 → pathway 22개로 사실상 916:1 압축이다.
+
+gene set 매핑은 표현형과 무관한 정적 메타데이터라 fold 마다 다시 계산할
+필요가 없다(`src/features/pathway_aggregate.py` docstring 참고). 실행
+결과(6개 조합 전부 음성)는
+[additional_results.md §3](../research/2026-08-19/additional_results.md) 참고.
+
+재현: `python scripts/19_pathway_representation.py`.
+
+---
+
+## 6. Mutation signature 입력 (`docs/research/2026-08-19/additional_results.md` §4)
+
+DepMap 이 별도 배포하는 원시 MAF `OmicsSomaticMutations.csv` 에서
+trinucleotide context 를 계산해 만든 입력이다(1\~4절의 이진 행렬과는
+완전히 다른 원본 파일 — 위치/염기 정보가 살아있는 파일).
+
+| 단계 | 값 |
+| --- | ---: |
+| 원시 MAF 전체 행 | 1,172,689 |
+| default 프로파일 SNV(순수 단일염기치환)만 추린 행 | 644,520 |
+| 참조 게놈 | hg38 2bit, UCSC, 796MB |
+| SNV 중 sbs96 분류 실패(좌표 불일치 등, 버림) | 있음 — `classify_sbs96()` 이 `None` 반환 시 제외 |
+| 최종 signature 행렬 shape | 1,631 × 96 |
+| 전부 0인 세포주(SNV 0건) | 0개 |
+
+96-class 중 관측 비율 상위 5개(전체 세포주 평균):
+
+| SBS class | 평균 비율 |
+| --- | ---: |
+| `T[C>T]C` | 3.89% |
+| `T[C>T]A` | 2.80% |
+| `G[C>T]G` | 2.58% |
+| `T[C>G]T` | 2.56% |
+| `C[C>T]C` | 2.51% |
+
+상위 5개 전부 `C>T` 치환이다. C>T 는 여러 COSMIC SBS(SBS1 의 CpG
+탈아민화, SBS7 의 자외선 손상 등)에서 공통적으로 우세한 치환 유형이라,
+signature 계산 파이프라인이 생물학적으로 그럴듯한 분포를 만들어내고
+있다는 방향성 검증으로 볼 수 있다 — 정식 SBS exposure 분해(NMF)를
+거친 것은 아니므로 특정 signature 로 단정하지는 않는다.
+
+유전자 단위(20,132개, sparsity 심함)와 signature 단위(96개, 조밀)를
+같은 조건에서 비교한 실행 결과(6개 조합 중 5개 양성)는
+[additional_results.md §4](../research/2026-08-19/additional_results.md) 참고.
+
+재현: `python scripts/23_build_mutation_signature.py`.
+
+---
+
+## 7. TCGA 입력 데이터
+
+DepMap 이 아닌 완전히 별도의 코호트(TCGA)를 외부 검증에 썼다. 파일
+출처·barcode 매칭·라벨 정의 등 상세 통계는
+[`docs/gdc/tcga_data_summary.md`](../gdc/tcga_data_summary.md) 로
+분리해 정리했다.
