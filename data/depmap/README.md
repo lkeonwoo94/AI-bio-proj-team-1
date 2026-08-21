@@ -3,6 +3,14 @@
 이 디렉터리의 데이터 파일은 **git 에 올리지 않는다** (`.gitignore` 처리).
 이 README 만 추적되며, 각자 아래 파일을 직접 받아 이 폴더에 넣는다.
 
+## 팀 공유 사본
+
+`data/depmap/` + `data/gdc/` + `data/reference/` 전체를 [Dropbox
+링크](https://www.dropbox.com/t/2Qq3gja1nqVe2btg)에서 한 번에 받을 수
+있다 — 원본을 각자 새로 받는 것보다 빠르다. 다만 Dropbox 전송 링크는
+기간이 지나면 만료될 수 있으므로, 이 링크가 끊기면 아래 원본 출처에서
+다시 받는다(release 버전은 항상 `configs/data.yaml` 로 확인).
+
 ## 받아야 할 파일
 
 https://depmap.org/portal/data_page/ 에서 내려받는다.

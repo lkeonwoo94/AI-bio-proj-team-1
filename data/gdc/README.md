@@ -4,6 +4,14 @@
 올리지 않는다**. 이 README 만 추적되며, TCGA 독립 코호트 검증
 (`final_conclusion.md` "Future Work 3")에 쓴다.
 
+## 팀 공유 사본
+
+`data/depmap/` + `data/gdc/` + `data/reference/` 전체를 [Dropbox
+링크](https://www.dropbox.com/t/2Qq3gja1nqVe2btg)에서 한 번에 받을 수
+있다 — MAF 파일이 750MB 라 원본 재다운로드보다 이쪽이 끊길 위험이
+적다. Dropbox 전송 링크는 기간이 지나면 만료될 수 있으니, 끊기면
+아래 원본 출처를 쓴다.
+
 ## 받아야 할 파일
 
 | 파일 | 내용 | 출처 |

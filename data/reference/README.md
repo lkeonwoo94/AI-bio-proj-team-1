@@ -2,6 +2,13 @@
 
 `data/depmap/`, `data/gdc/` 와 같은 방식 — git 에 올리지 않는다.
 
+## 팀 공유 사본
+
+`data/depmap/` + `data/gdc/` + `data/reference/` 전체를 [Dropbox
+링크](https://www.dropbox.com/t/2Qq3gja1nqVe2btg)에서 한 번에 받을 수
+있다 — `hg38.2bit` 가 800MB 라 이쪽이 더 빠르다. Dropbox 전송 링크는
+기간이 지나면 만료될 수 있으니, 끊기면 아래 원본 출처를 쓴다.
+
 ## 받아야 할 파일
 
 | 파일 | 내용 | 출처 |
