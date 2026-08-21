@@ -293,6 +293,34 @@
     .panel-grid { grid-template-columns: repeat(2, 1fr); }
     #nav { display: none; }
   }
+
+  /* ============ print (PDF export) — 슬라이드 1장 = 페이지 1장 ============ */
+  @media print {
+    @page { size: 1280px 720px; margin: 0; }
+    html, body { height: auto; }
+    #deck {
+      height: auto;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+    section.slide {
+      height: 720px;
+      padding: 34px clamp(28px, 6vw, 88px);
+      page-break-after: always;
+      break-after: page;
+      page-break-inside: avoid;
+      scroll-snap-align: none;
+      overflow: visible;
+    }
+    section.slide:last-child { page-break-after: auto; }
+    .slide-inner { animation: none; }
+    #nav, .keyhint { display: none; }
+    .full-figure img { max-height: 42vh; }
+    .cols, .cols.reverse { align-items: start; }
+    .figure-block img { max-height: 46vh; object-fit: contain; }
+    .lede { margin-bottom: 18px; }
+    .stat-row { margin: 18px 0; }
+  }
 </style>
 
 <div id="deck">
