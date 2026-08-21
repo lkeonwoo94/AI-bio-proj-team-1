@@ -17,6 +17,7 @@ Random Forest 로 기존 nested CV(`run_nested_cv`, §13 원칙 동일)를
 from __future__ import annotations
 
 import argparse
+import ast
 import sys
 import tempfile
 from pathlib import Path
@@ -24,9 +25,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import mlflow
+import mlflow.sklearn
 
 from src.cv.nested import run_nested_cv
 from src.data.merge import load_cohort
+from src.labels.binarize import LabelBinarizer
 from src.models.zoo import get_model
 from src.tracking.mlflow_utils import experiment_name, init_tracking, log_artifact_df, log_fold_metrics
 
@@ -98,6 +101,34 @@ def main() -> int:
 
                 # feature importance 는 CSV artifact 로 — 기존 day07 산출물과 같은 내용.
                 log_artifact_df(result.importances, f"importances_{target}.csv", tmp_dir)
+
+                # --- Model Registry 용 모델 로깅 ---
+                # nested CV 는 fold 마다 다른 fitted 모델을 만들어서 "그 CV 실험을
+                # 대표하는 단일 모델"이 원래 없다. 여기서는 outer fold 중 ROC-AUC
+                # 가 가장 높았던 fold 의 하이퍼파라미터를 그대로 가져와, **전체
+                # 코호트**로 다시 학습한 모델 하나를 "참고용 최종 모델"로 저장한다
+                # — 이 모델은 outer test 로 평가된 적이 없으므로 위의 CV 지표를
+                # 이 모델 자체의 성능으로 오독하면 안 된다(§13 원칙과 별개로,
+                # Model Registry 데모 목적의 부가 산출물일 뿐).
+                best_row = result.metrics.loc[result.metrics.roc_auc.idxmax()]
+                best_params = ast.literal_eval(best_row.best_params)  # 이미 "clf__..." 형식
+                # 주의: spec.build() 는 ModelSpec 생성 시 클로저에 캡쳐된 "같은"
+                # Pipeline 객체를 매번 반환한다(src/models/zoo.py, `lambda: pipe`).
+                # CatBoost 는 sklearn 의 clone() 프로토콜을 완전히 따르지 않아,
+                # nested CV 동안 그 공유 객체 자체가 이미 fit 된 채로 남는다 —
+                # 그 상태에서 set_params() 를 부르면 "You can't change params of
+                # fitted model" 에러가 난다. get_model() 을 다시 불러 완전히 새
+                # Pipeline 인스턴스를 받는다.
+                final_pipe = get_model(args.model).build()
+                final_pipe.set_params(**best_params)
+                y_full = LabelBinarizer(target).fit_transform(cohort.y[target])
+                final_pipe.fit(cohort.X, y_full)
+
+                mlflow.sklearn.log_model(
+                    final_pipe, name="model", serialization_format="cloudpickle",
+                    registered_model_name=f"{spec.name}_{target}",
+                )
+                mlflow.log_param("final_model_source_fold", int(best_row.fold))
 
                 print(f"  parent run 요약: mean ROC-AUC {summary.roc_auc:.3f} "
                       f"(run_id={parent_run.info.run_id})\n")
