@@ -64,6 +64,7 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="elastic_net", help="중요도를 집계할 모델")
     p.add_argument("--top-k", type=int, default=50, help="fold 안에서 '선택됨' 으로 볼 상위 개수")
+    p.add_argument("--top-n", type=int, default=15, help="Figure 4에 표시할 유전자 개수")
     args = p.parse_args()
 
     aggs = {}
@@ -96,7 +97,7 @@ def main() -> int:
         print(cross[cols].round(2).to_string(index=False))
         cross.to_csv(TABLES / f"day11_cross_phenotype_{args.model}.csv", index=False)
 
-    path = plot_stability(aggs, args.model)
+    path = plot_stability(aggs, args.model, top_n=args.top_n)
     print(f"\n저장: {path.name}, day11_*.csv")
     return 0
 

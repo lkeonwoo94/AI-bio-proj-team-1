@@ -29,15 +29,34 @@ TARGET_LABEL = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
 
 
 def load_cv(scheme: str = "random") -> pd.DataFrame:
-    files = sorted(TABLES.glob(f"cv_{scheme}_*.csv"))
+    """`cv_{scheme}_{model}_{target}.csv` 만 정확히 매칭해서 모은다.
+
+    예전에는 `TABLES.glob(f"cv_{scheme}_*.csv")` 로 전부 긁어모았는데,
+    `cv_random_random_forest_damaging_only_wgd.csv`(scripts/21_tcga_validation.py
+    가 TCGA 내부 baseline 비교용으로 만든, model="random_forest" 컬럼값을
+    똑같이 쓰는 보조 파일)까지 같이 걸려서 WGD/RF 행이 오염된 적이 있다
+    (일반 5-fold + damaging-only 5-fold가 섞여 평균됨). `MODEL_ORDER` ×
+    `TARGET_LABEL` 조합의 정확한 파일명만 읽어 이 문제를 원천 차단한다.
+    """
+    files = []
+    for model in MODEL_ORDER:
+        for target in TARGET_LABEL:
+            path = TABLES / f"cv_{scheme}_{model}_{target}.csv"
+            if path.exists():
+                files.append(path)
     if not files:
         raise SystemExit(f"{scheme} 결과가 없습니다. 먼저 05_run_cv.py 를 실행하세요.")
-    return pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
+    return pd.concat([pd.read_csv(f) for f in sorted(files)], ignore_index=True)
 
 
-def plot_comparison(df: pd.DataFrame) -> Path:
+def plot_comparison(df: pd.DataFrame, prevalence: dict[str, float] | None = None) -> Path:
+    """prevalence: {target: 양성 비율}. PR-AUC 무작위 기준선은 ROC-AUC 와 달리
+    0.5 가 아니라 양성 비율이다 — WGD 처럼 클래스가 불균형하면(65.2% 양성)
+    "찍기만 해도" PR-AUC 가 0.65 근처로, 0.5 를 기준선으로 쓰면 모델 성능을
+    과장해 보이게 한다. 안 주면 모든 표현형에 0.5 를 쓴다(과거 동작과 동일)."""
     use_style()
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.2), sharey=False)
+    prevalence = prevalence or {}
 
     for ax, metric, title in ((axes[0], "roc_auc", "ROC-AUC"), (axes[1], "pr_auc", "PR-AUC")):
         models = [m for m in MODEL_ORDER if m in set(df.model)]
@@ -51,15 +70,27 @@ def plot_comparison(df: pd.DataFrame) -> Path:
             ax.bar(x + (i - 1) * width, means, width, yerr=errs, capsize=3,
                    label=TARGET_LABEL[target], color=PHENOTYPE_COLORS[target])
 
-        ax.axhline(0.5, color="k", ls=":", lw=1, label="무작위 수준" if metric == "roc_auc" else None)
+        if metric == "roc_auc":
+            # ROC-AUC 는 클래스 비율과 무관하게 무작위 기준선이 항상 0.5다.
+            ax.axhline(0.5, color="k", ls=":", lw=1, label="무작위 수준(ROC-AUC)")
+        else:
+            # PR-AUC 는 무작위 기준선이 표현형별 양성 비율이다 — 표현형마다
+            # 따로 그린다(WGD 만 0.65 근처, CIN/LOH 는 median split 이라 ~0.5).
+            for target in ("wgd", "cin", "loh"):
+                base = prevalence.get(target, 0.5)
+                ax.axhline(base, color=PHENOTYPE_COLORS[target], ls=":", lw=1, alpha=0.6)
+
         ax.set_xticks(x)
         ax.set_xticklabels([MODEL_LABEL[m] for m in models], rotation=15, ha="right")
         ax.set_title(title)
         ax.set_ylim(0.4, 1.0)
         ax.legend(fontsize=8, ncol=2)
 
-    fig.suptitle("Figure 3. 모델별 예측 성능 (random 5x5 nested CV, 오차막대는 fold 표준편차)",
-                 y=1.02, fontsize=12)
+    fig.suptitle(
+        "Figure 3. 모델별 예측 성능 (random 5x5 nested CV, 오차막대는 fold 표준편차)\n"
+        "(PR-AUC 점선은 표현형별 양성 비율 — WGD 만 0.65 근처로 다름, ROC-AUC 는 항상 0.5)",
+        y=1.05, fontsize=12,
+    )
     fig.tight_layout()
     return save(fig, "fig3_model_comparison.png")
 
@@ -89,7 +120,18 @@ def main() -> int:
               f"BA {best.balanced_accuracy:.3f} | Brier {best.brier:.3f}")
 
     summary.to_csv(TABLES / "day10_model_comparison.csv", index=False)
-    path = plot_comparison(df)
+
+    from src.data.merge import load_cohort
+    from src.labels.binarize import LabelBinarizer
+
+    cohort = load_cohort()
+    prevalence = {t: float(LabelBinarizer(t).fit_transform(cohort.y[t]).mean())
+                 for t in ("wgd", "cin", "loh")}
+    print("\n[PR-AUC 무작위 기준선 — 표현형별 양성 비율]")
+    for t, p in prevalence.items():
+        print(f"  {TARGET_LABEL[t]}: {p:.3f}")
+
+    path = plot_comparison(df, prevalence=prevalence)
     print(f"\n저장: {path.name}, day10_model_comparison.csv")
     return 0
 
