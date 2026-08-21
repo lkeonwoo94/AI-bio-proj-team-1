@@ -1,0 +1,4 @@
+[core]
+    remote = local-pilot
+['remote "local-pilot"']
+    url = /home/kali/adni-shared/dvc-remote-pilot

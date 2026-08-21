@@ -3,16 +3,25 @@
 # 용량(GitHub 파일당 100MB)과 재배포 정책 문제를 원천적으로 피하기 위함이다.
 # 어떤 파일을 어디서 받아야 하는지는 data/depmap/README.md 와
 # configs/data.yaml 에 기록해 공유한다.
+# (DVC 파일럿, feature/dvc-pilot) data/*.dvc 메타데이터 파일은 실제
+# 데이터가 아니라 해시·경로 정보만 담은 텍스트라 git 에 그대로 올린다
+# — `dvc pull` 로 실제 파일을 받는 팀원 입장에서는 이 파일이 곧
+# "어디서 받아야 하는지"에 대한 답이 된다(README 를 대체하지는 않는다,
+# URL 출처 설명은 여전히 README 몫).
 data/*
+!data/*.dvc
 !data/depmap/
 data/depmap/*
 !data/depmap/README.md
+!data/depmap/*.dvc
 !data/gdc/
 data/gdc/*
 !data/gdc/README.md
+!data/gdc/*.dvc
 !data/reference/
 data/reference/*
 !data/reference/README.md
+!data/reference/*.dvc
 
 # --- 캐시 ---
 __pycache__/

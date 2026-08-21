@@ -1,0 +1,5 @@
+outs:
+- md5: dcc3ea27079aa6dc3f9deccd7275e0f8
+  size: 835393456
+  hash: md5
+  path: hg38.2bit
