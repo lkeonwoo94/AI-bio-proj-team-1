@@ -741,6 +741,8 @@ WGD/CIN/LOH를 동시에 학습하는 것이 개별 모델보다 유리한지 �
 
 **Mutation → WGD/CIN/LOH → Feature selection → Minimal panel**
 
+![Figure 1](results/figures/fig1_overview.png)
+
 ### Figure 2. WGD/CIN/LOH 분포
 
 세 phenotype의 class distribution.
