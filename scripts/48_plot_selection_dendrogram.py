@@ -27,6 +27,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import itertools
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -103,8 +105,11 @@ def plot_lineage_dendrogram(model: str, panel_size: int) -> Path:
     return save(fig, f"fig25b_lineage_dendrogram_{model}_panel{panel_size}.png")
 
 
+CLUSTER_PALETTE = ("#2ca02c", "#d62728", "#9467bd", "#ff7f0e", "#8c564b", "#e377c2", "#bcbd22", "#17becf")
+
+
 def draw_fixed_order_dendrogram(ax, Z: np.ndarray, labels: list[str], fixed_order: list[str],
-                                 color: str = "#4c72b0") -> None:
+                                 above_color: str = "#4c72b0", threshold: float | None = None) -> None:
     """`labels` 순서의 잎을 `fixed_order`가 정한 y위치에 강제로 그린다.
 
     scipy dendrogram()은 잎 순서를 군집 결과에 따라 매번 다르게 정하므로,
@@ -112,22 +117,41 @@ def draw_fixed_order_dendrogram(ax, Z: np.ndarray, labels: list[str], fixed_orde
     Z 그대로 쓰되, 각 리프의 y좌표만 외부에서 고정하고 내부 노드는 자식의
     y좌표 평균으로 재귀 계산해 직접 선을 그린다 — 선이 교차할 수 있지만
     병합 구조(거리)는 정확하다.
+
+    색은 scipy dendrogram()과 같은 규칙(COLOR_NOTE 참고): threshold(기본
+    최대 병합거리의 70%) 아래에서 갈라지는 서브클러스터마다 색을 순환
+    배정하고, threshold 위 가지는 전부 above_color.
     """
     pos = {label: i for i, label in enumerate(fixed_order)}
     tree = to_tree(Z)
+    if threshold is None:
+        threshold = 0.7 * Z[:, 2].max() if len(Z) else 0.0
+    color_cycle = itertools.cycle(CLUSTER_PALETTE)
+    cluster_color = {}
 
-    def recurse(node):
+    def color_for(cluster_id: int) -> str:
+        if cluster_id not in cluster_color:
+            cluster_color[cluster_id] = next(color_cycle)
+        return cluster_color[cluster_id]
+
+    def recurse(node, cluster_id: int | None):
         if node.is_leaf():
             return pos[labels[node.id]], 0.0
-        y_left, x_left = recurse(node.left)
-        y_right, x_right = recurse(node.right)
+        if node.dist <= threshold:
+            cluster_id = cluster_id if cluster_id is not None else node.id
+            color = color_for(cluster_id)
+        else:
+            cluster_id = None
+            color = above_color
+        y_left, x_left = recurse(node.left, cluster_id)
+        y_right, x_right = recurse(node.right, cluster_id)
         x_node = node.dist
         ax.plot([x_left, x_node], [y_left, y_left], color=color, lw=1)
         ax.plot([x_right, x_node], [y_right, y_right], color=color, lw=1)
         ax.plot([x_node, x_node], [y_left, y_right], color=color, lw=1)
         return (y_left + y_right) / 2, x_node
 
-    recurse(tree)
+    recurse(tree, None)
     ax.set_yticks(range(len(fixed_order)))
     ax.set_yticklabels(fixed_order, fontsize=7)
     ax.set_ylim(-0.5, len(fixed_order) - 0.5)
@@ -182,9 +206,7 @@ def plot_lineage_feature_dendrogram(model: str, panel_size: int, top_n: int = TO
     fig.suptitle(f"Figure 25c. 암종별 패널 유전자 co-mutation 패턴 (Figure 25와 같은 축, "
                  f"{MODEL_LABEL.get(model, model)}, {panel_size}-gene 패널, "
                  f"표본 수 상위 {top_n}개 암종, 유전자 순서는 열별로 고정)", y=0.985, fontsize=14)
-    fig.text(0.5, 0.005, "* 가지 색은 의미 없음 — 유전자 순서를 열별로 고정해서 직접 그린 트리라 "
-                          "서브클러스터 색 구분(Figure 25/25b 각주 참고) 없이 단색만 씀.",
-             ha="center", fontsize=9, color="#555")
+    fig.text(0.5, 0.005, COLOR_NOTE, ha="center", fontsize=9, color="#555")
     return save(fig, f"fig25c_lineage_feature_dendrogram_{model}_panel{panel_size}.png")
 
 
