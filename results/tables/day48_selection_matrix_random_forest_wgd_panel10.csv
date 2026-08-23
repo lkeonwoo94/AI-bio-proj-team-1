@@ -1,0 +1,16 @@
+feature,0,1,2,3,4
+APC (324)_damaging,1,0,0,1,1
+BCOR (54880)_damaging,0,1,0,1,0
+BRAF (673)_hotspot,1,1,1,1,1
+CREBBP (1387)_damaging,1,1,0,0,0
+GNA13 (10672)_damaging,0,0,1,1,0
+ID3 (3399)_damaging,1,1,1,1,1
+KRAS (3845)_hotspot,1,1,0,0,1
+LRP1B (53353)_damaging,1,1,1,1,1
+PDS5B (23047)_damaging,0,0,1,0,0
+RB1 (5925)_damaging,0,1,1,0,1
+RPL22 (6146)_damaging,0,0,1,0,0
+TERT (7015)_hotspot,1,1,1,1,1
+TP53 (7157)_damaging,1,1,1,1,1
+TP53 (7157)_hotspot,1,1,1,1,1
+TTN (7273)_damaging,1,0,0,1,1

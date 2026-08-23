@@ -1,0 +1,18 @@
+feature,0,1,2,3,4
+APC (324)_damaging,0,0,0,1,0
+ARID1A (8289)_damaging,1,0,0,1,1
+BRAF (673)_hotspot,0,1,0,0,1
+CTCF (10664)_damaging,1,0,0,0,0
+ID3 (3399)_damaging,1,1,1,1,1
+KEAP1 (9817)_damaging,0,0,1,0,0
+KRAS (3845)_hotspot,1,1,1,1,1
+MUC19 (283463)_damaging,0,0,1,0,1
+NF2 (4771)_damaging,1,1,1,1,0
+NRAS (4893)_hotspot,0,1,0,1,1
+PITX1 (5307)_damaging,0,1,1,0,1
+RB1 (5925)_damaging,1,1,1,1,1
+RPL22 (6146)_damaging,1,0,0,0,0
+SMAD4 (4089)_damaging,1,1,0,1,0
+TP53 (7157)_damaging,1,1,1,1,1
+TP53 (7157)_hotspot,1,1,1,1,1
+TTN (7273)_damaging,0,0,1,0,0

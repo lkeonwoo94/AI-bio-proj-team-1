@@ -8,3 +8,4 @@ seaborn>=0.13
 pyyaml>=6.0
 pytest>=8.0
 catboost>=1.2
+umap-learn==0.5.6   # scripts/44 mutation UMAP — 0.5.7+는 sklearn>=1.6 API(ensure_all_finite)를 요구해 이 저장소의 sklearn 1.4.2와 안 맞음
