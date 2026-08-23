@@ -3,6 +3,8 @@
 Figure 24. canonical component 별 산점도(이진화 라벨) + 이진화 vs 연속값
 라벨 비교(component 1) — 후자는 암종(lineage)별로 색칠해 공유 축이 암종
 차이를 반영하는 건 아닌지 확인한다.
+Figure 24c. Figure 24와 같은 component별 3패널 구성, 색만 암종 기준
+(Figure 23/23b 관계와 동일하게 대응).
 """
 
 from __future__ import annotations
@@ -88,7 +90,25 @@ def main() -> int:
     fig.tight_layout()
     path2 = save(fig, "fig24b_mutation_cca_comparison.png")
 
-    print(f"저장: {path1.name}, {path2.name}")
+    # Figure 24c. Figure 24와 같은 component별 3패널, 색은 암종(lineage) 기준.
+    fig, axes = plt.subplots(1, n_components, figsize=(15, 5), squeeze=False)
+    for i, ax in enumerate(axes.flat):
+        for group, color in palette.items():
+            idx = grouped.eq(group).to_numpy()
+            ax.scatter(coords[f"U_bin_{i + 1}"][idx], coords[f"V_bin_{i + 1}"][idx], s=12, alpha=0.6,
+                       color=color, label=f"{group} (n={idx.sum()})", linewidths=0)
+        r = cca.loc[i, "correlation_binarized"]
+        ax.set(title=f"CCA component {i + 1}: r={r:.3f}",
+               xlabel="Mutation canonical score", ylabel="Instability canonical score",
+               xlim=x_limits, ylim=y_limits)
+    axes.flat[-1].legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=7,
+                          title=f"상위 {TOP_N_LINEAGES}개 암종", title_fontsize=8)
+    fig.suptitle("Figure 24c. WGD·CIN·LOH 공유 축 (CCA, 암종별 색칠 — Figure 24 대응)",
+                 y=1.03, fontsize=13)
+    fig.tight_layout()
+    path3 = save(fig, "fig24c_mutation_cca_lineage.png")
+
+    print(f"저장: {path1.name}, {path2.name}, {path3.name}")
     return 0
 
 
