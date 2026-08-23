@@ -66,6 +66,10 @@ def main() -> int:
                xlabel="Mutation canonical score", ylabel="Instability canonical score",
                xlim=x_limits, ylim=y_limits)
     fig.suptitle("Figure 24. WGD·CIN·LOH 공유 축 (CCA, 이진화 라벨)", y=1.03, fontsize=13)
+    fig.text(0.5, -0.04,
+             "* component 2에서 mutation canonical score > 10인 8개는 특정 암종이 아니라 hypermutator "
+             "(전체 mutation 500~1600개, 코호트 중앙값 26개) 이상치 — 표현형 신호가 아닌 mutation burden 축임.",
+             ha="center", fontsize=8, color="#555")
     fig.tight_layout()
     path1 = save(fig, "fig24_mutation_cca.png")
 
