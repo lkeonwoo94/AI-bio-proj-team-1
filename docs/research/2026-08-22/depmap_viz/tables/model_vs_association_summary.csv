@@ -1,0 +1,4 @@
+target,겹치는 개수,모델만,통계검정만,겹치는 유전자
+WGD,6,4,4,"BRAF (673)_hotspot, CREBBP (1387)_damaging, ID3 (3399)_damaging, TERT (7015)_hotspot, TP53 (7157)_damaging, TP53 (7157)_hotspot"
+CIN,6,4,4,"CREBBP (1387)_damaging, ID3 (3399)_damaging, RB1 (5925)_damaging, TERT (7015)_hotspot, TP53 (7157)_damaging, TP53 (7157)_hotspot"
+LOH,5,5,5,"ARID1A (8289)_damaging, ID3 (3399)_damaging, RB1 (5925)_damaging, TP53 (7157)_damaging, TP53 (7157)_hotspot"
