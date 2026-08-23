@@ -9,6 +9,10 @@ Figure 25. WGD/CIN/LOH 3개 표현형을 한 그림에 나란히 배치(행=유�
 Figure 25b. 같은 3열(WGD/CIN/LOH) 구성이지만 행이 암종(lineage) —
 패널 유전자들에 대한 암종별 평균 mutation 빈도 프로파일로 암종을
 계층군집화한다. 표본이 적은 암종(<10)은 제외한다.
+Figure 25c. Figure 25와 같은 축 구성(y=feature, x=Jaccard distance)을
+암종별로 반복 — 열은 WGD/CIN/LOH, 행은 표본 수 상위 암종. 셀 하나는
+'그 암종 샘플들 안에서 패널 유전자들이 서로 같이 mutated 되는 패턴'의
+Jaccard 기반 dendrogram (fold 대신 암종 내 샘플이 관측 단위).
 """
 
 from __future__ import annotations
@@ -20,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import pdist
@@ -32,6 +37,7 @@ TABLES = REPO_ROOT / "results" / "tables"
 TARGETS = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
 MODEL_LABEL = {"random_forest": "Random Forest", "elastic_net": "Elastic Net"}
 MIN_LINEAGE_N = 10
+TOP_N_LINEAGE_ROWS = 8
 
 
 def selection_matrix(model: str, target: str, panel_size: int) -> pd.DataFrame:
@@ -89,6 +95,50 @@ def plot_lineage_dendrogram(model: str, panel_size: int) -> Path:
     return save(fig, f"fig25b_lineage_dendrogram_{model}_panel{panel_size}.png")
 
 
+def gene_by_sample_matrix(genes: list[str], lineage: str, cohort) -> pd.DataFrame:
+    """row=gene, col=이 암종 소속 샘플 — Figure 25의 row=gene/col=fold 와 같은 모양,
+    fold 대신 암종 내 샘플을 관측 단위로 쓴다."""
+    ids = cohort.groups[cohort.groups == lineage].index
+    return cohort.X.loc[ids, genes].T
+
+
+def plot_lineage_feature_dendrogram(model: str, panel_size: int, top_n: int = TOP_N_LINEAGE_ROWS) -> Path:
+    """Figure 25c. 열=WGD/CIN/LOH, 행=암종(표본 수 상위 top_n). 각 셀은
+    Figure 25와 같은 y=feature, x=Jaccard distance dendrogram."""
+    cohort = load_cohort()
+    counts = cohort.groups.value_counts()
+    lineages = counts[counts >= MIN_LINEAGE_N].head(top_n).index.tolist()
+
+    fig, axes = plt.subplots(len(lineages), 3, figsize=(18, 2.8 * len(lineages)), squeeze=False)
+
+    for row, lineage in enumerate(lineages):
+        for col, target in enumerate(TARGETS):
+            ax = axes[row][col]
+            genes = panel_genes(model, target, panel_size)
+            matrix = gene_by_sample_matrix(genes, lineage, cohort)
+            distances = pdist(matrix.to_numpy(), metric="jaccard")
+            distances = np.nan_to_num(distances, nan=0.0)  # 두 유전자 모두 이 암종에서 mutation 0건이면 0/0
+            if len(matrix) > 1:
+                dendrogram(linkage(distances, method="average"), labels=matrix.index.tolist(),
+                           orientation="right", ax=ax)
+            else:
+                ax.text(0.5, 0.5, matrix.index[0], ha="center", va="center")
+            ax.set_xlim(0, 1)
+            ax.tick_params(axis="y", labelsize=7)
+            ax.set_xlabel("Jaccard distance", fontsize=8)
+            if row == 0:
+                ax.set_title(f"{TARGETS[target]}", fontsize=13)
+            if col == 0:
+                ax.text(-0.28, 0.5, f"{lineage}\n(n={int(counts[lineage])})", transform=ax.transAxes,
+                        rotation=90, ha="center", va="center", fontsize=9)
+
+    fig.suptitle(f"Figure 25c. 암종별 패널 유전자 co-mutation 패턴 (Figure 25와 같은 축, "
+                 f"{MODEL_LABEL.get(model, model)}, {panel_size}-gene 패널, "
+                 f"표본 수 상위 {top_n}개 암종)", y=1.0, fontsize=14)
+    fig.tight_layout()
+    return save(fig, f"fig25c_lineage_feature_dendrogram_{model}_panel{panel_size}.png")
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--model", default="random_forest")
@@ -120,7 +170,10 @@ def main() -> int:
     use_style()
     path2 = plot_lineage_dendrogram(args.model, args.panel_size)
 
-    print(f"저장: {path1.name}, {path2.name}, day48*_*.csv")
+    use_style()
+    path3 = plot_lineage_feature_dendrogram(args.model, args.panel_size)
+
+    print(f"저장: {path1.name}, {path2.name}, {path3.name}, day48*_*.csv")
     return 0
 
 
