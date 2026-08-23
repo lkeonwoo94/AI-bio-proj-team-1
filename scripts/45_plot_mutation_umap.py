@@ -33,25 +33,34 @@ def padded_limits(values: np.ndarray, fraction: float = 0.05) -> tuple[float, fl
 
 
 def plot_lineage(coords: pd.DataFrame, x_lim: tuple[float, float], y_lim: tuple[float, float]) -> Path:
-    """Figure 23b. 암종(lineage) 색칠 — 상위 12종 + 나머지는 'Other'로 묶는다."""
+    """Figure 23b. Figure 23과 같은 3패널(WGD/CIN/LOH) 구성, 색은 암종(lineage) 기준.
+
+    좌표/색은 세 패널이 전부 동일하다(표현형과 무관하게 같은 UMAP·같은 암종
+    분류) — Figure 23의 표현형별 패널과 한눈에 나란히 비교하기 위해 같은
+    3분할 레이아웃을 쓴다.
+    """
     counts = coords.lineage.value_counts()
     shown = counts.head(TOP_N_LINEAGES).index
     plot_group = coords.lineage.where(coords.lineage.isin(shown), "Other lineage")
     groups = list(shown) + ["Other lineage"]
     palette = dict(zip(groups, sns.color_palette("tab20", len(shown)).as_hex() + ["#bdbdbd"]))
 
-    fig, ax = plt.subplots(figsize=(11, 8))
-    for group in groups:
-        idx = plot_group.eq(group).to_numpy()
-        ax.scatter(coords.UMAP1[idx], coords.UMAP2[idx], s=13, alpha=0.72,
-                   color=palette[group], label=f"{group} (n={idx.sum()})", linewidths=0)
-    ax.set_title("암종(lineage)별 mutation 패턴 분포", fontsize=13)
-    ax.set_xlabel("UMAP 1")
-    ax.set_ylabel("UMAP 2")
-    ax.set_xlim(*x_lim)
-    ax.set_ylim(*y_lim)
-    ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8, title=f"상위 {TOP_N_LINEAGES}개 암종")
-    fig.suptitle("Figure 23b. Mutation UMAP — 암종별 분포 (Figure 23과 같은 좌표계)", y=1.0, fontsize=13)
+    fig, axes = plt.subplots(1, 3, figsize=(21, 6))
+    for ax, target in zip(axes, TARGETS):
+        for group in groups:
+            idx = plot_group.eq(group).to_numpy()
+            ax.scatter(coords.UMAP1[idx], coords.UMAP2[idx], s=12, alpha=0.72,
+                       color=palette[group], label=f"{group} (n={idx.sum()})", linewidths=0)
+        ax.set_title(f"{TARGETS[target]} 패널 — 암종별 mutation 패턴 분포", fontsize=13)
+        ax.set_xlabel("UMAP 1")
+        ax.set_ylabel("UMAP 2")
+        ax.set_xlim(*x_lim)
+        ax.set_ylim(*y_lim)
+    axes[-1].legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=7.5,
+                    title=f"상위 {TOP_N_LINEAGES}개 암종", title_fontsize=8.5)
+    fig.suptitle("Figure 23b. Mutation UMAP — 암종별 분포 (Figure 23과 같은 좌표계, WGD/CIN/LOH 패널 비교용)",
+                 y=1.02, fontsize=14)
+    fig.tight_layout()
     return save(fig, "fig23b_mutation_umap_lineage.png")
 
 
