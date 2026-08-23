@@ -12,7 +12,11 @@ Figure 25b. 같은 3열(WGD/CIN/LOH) 구성이지만 행이 암종(lineage) —
 Figure 25c. Figure 25와 같은 축 구성(y=feature, x=Jaccard distance)을
 암종별로 반복 — 열은 WGD/CIN/LOH, 행은 표본 수 상위 암종. 셀 하나는
 '그 암종 샘플들 안에서 패널 유전자들이 서로 같이 mutated 되는 패턴'의
-Jaccard 기반 dendrogram (fold 대신 암종 내 샘플이 관측 단위).
+Jaccard 기반 dendrogram (fold 대신 암종 내 샘플이 관측 단위). 유전자
+순서(y축)는 표현형(열)마다 알파벳순으로 고정 — scipy 기본 dendrogram은
+군집 결과에 따라 매번 잎 순서를 다르게 배치해 8개 암종 행을 세로로
+비교하기 어려웠다. 고정 순서를 쓰는 대신 트리 선이 서로 교차할 수
+있다(거리·병합 구조 자체는 그대로 정확하다).
 """
 
 from __future__ import annotations
@@ -26,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.cluster.hierarchy import dendrogram, linkage, to_tree
 from scipy.spatial.distance import pdist
 
 from src.config import REPO_ROOT
@@ -95,6 +99,37 @@ def plot_lineage_dendrogram(model: str, panel_size: int) -> Path:
     return save(fig, f"fig25b_lineage_dendrogram_{model}_panel{panel_size}.png")
 
 
+def draw_fixed_order_dendrogram(ax, Z: np.ndarray, labels: list[str], fixed_order: list[str],
+                                 color: str = "#4c72b0") -> None:
+    """`labels` 순서의 잎을 `fixed_order`가 정한 y위치에 강제로 그린다.
+
+    scipy dendrogram()은 잎 순서를 군집 결과에 따라 매번 다르게 정하므로,
+    여러 트리(암종별)를 같은 y축 순서로 나란히 비교할 수 없다. 병합 거리는
+    Z 그대로 쓰되, 각 리프의 y좌표만 외부에서 고정하고 내부 노드는 자식의
+    y좌표 평균으로 재귀 계산해 직접 선을 그린다 — 선이 교차할 수 있지만
+    병합 구조(거리)는 정확하다.
+    """
+    pos = {label: i for i, label in enumerate(fixed_order)}
+    tree = to_tree(Z)
+
+    def recurse(node):
+        if node.is_leaf():
+            return pos[labels[node.id]], 0.0
+        y_left, x_left = recurse(node.left)
+        y_right, x_right = recurse(node.right)
+        x_node = node.dist
+        ax.plot([x_left, x_node], [y_left, y_left], color=color, lw=1)
+        ax.plot([x_right, x_node], [y_right, y_right], color=color, lw=1)
+        ax.plot([x_node, x_node], [y_left, y_right], color=color, lw=1)
+        return (y_left + y_right) / 2, x_node
+
+    recurse(tree)
+    ax.set_yticks(range(len(fixed_order)))
+    ax.set_yticklabels(fixed_order, fontsize=7)
+    ax.set_ylim(-0.5, len(fixed_order) - 0.5)
+    ax.invert_yaxis()
+
+
 def gene_by_sample_matrix(genes: list[str], lineage: str, cohort) -> pd.DataFrame:
     """row=gene, col=이 암종 소속 샘플 — Figure 25의 row=gene/col=fold 와 같은 모양,
     fold 대신 암종 내 샘플을 관측 단위로 쓴다."""
@@ -109,33 +144,40 @@ def plot_lineage_feature_dendrogram(model: str, panel_size: int, top_n: int = TO
     counts = cohort.groups.value_counts()
     lineages = counts[counts >= MIN_LINEAGE_N].head(top_n).index.tolist()
 
-    fig, axes = plt.subplots(len(lineages), 3, figsize=(18, 2.8 * len(lineages)), squeeze=False)
+    # 표현형(열)마다 유전자 순서를 한 번만 고정 — 같은 열의 8개 암종 행이
+    # 전부 이 순서를 공유해야 세로 비교가 가능하다.
+    fixed_genes = {target: sorted(panel_genes(model, target, panel_size)) for target in TARGETS}
+
+    fig, axes = plt.subplots(len(lineages), 3, figsize=(19, 2.8 * len(lineages)), squeeze=False)
+    fig.subplots_adjust(left=0.11, top=0.95, bottom=0.03, hspace=0.55, wspace=0.3)
 
     for row, lineage in enumerate(lineages):
         for col, target in enumerate(TARGETS):
             ax = axes[row][col]
-            genes = panel_genes(model, target, panel_size)
+            genes = fixed_genes[target]
             matrix = gene_by_sample_matrix(genes, lineage, cohort)
             distances = pdist(matrix.to_numpy(), metric="jaccard")
             distances = np.nan_to_num(distances, nan=0.0)  # 두 유전자 모두 이 암종에서 mutation 0건이면 0/0
             if len(matrix) > 1:
-                dendrogram(linkage(distances, method="average"), labels=matrix.index.tolist(),
-                           orientation="right", ax=ax)
+                Z = linkage(distances, method="average")
+                draw_fixed_order_dendrogram(ax, Z, labels=matrix.index.tolist(), fixed_order=genes)
             else:
-                ax.text(0.5, 0.5, matrix.index[0], ha="center", va="center")
+                ax.set_yticks(range(len(genes)))
+                ax.set_yticklabels(genes, fontsize=7)
+                ax.invert_yaxis()
             ax.set_xlim(0, 1)
-            ax.tick_params(axis="y", labelsize=7)
             ax.set_xlabel("Jaccard distance", fontsize=8)
             if row == 0:
                 ax.set_title(f"{TARGETS[target]}", fontsize=13)
-            if col == 0:
-                ax.text(-0.28, 0.5, f"{lineage}\n(n={int(counts[lineage])})", transform=ax.transAxes,
-                        rotation=90, ha="center", va="center", fontsize=9)
+
+        # 암종 이름은 y tick label과 겹치지 않도록 subplot 밖(figure 왼쪽 여백)에 별도로 붙인다.
+        bbox = axes[row][0].get_position()
+        fig.text(0.01, (bbox.y0 + bbox.y1) / 2, f"{lineage}\n(n={int(counts[lineage])})",
+                  rotation=90, ha="left", va="center", fontsize=10, fontweight="bold")
 
     fig.suptitle(f"Figure 25c. 암종별 패널 유전자 co-mutation 패턴 (Figure 25와 같은 축, "
                  f"{MODEL_LABEL.get(model, model)}, {panel_size}-gene 패널, "
-                 f"표본 수 상위 {top_n}개 암종)", y=1.0, fontsize=14)
-    fig.tight_layout()
+                 f"표본 수 상위 {top_n}개 암종, 유전자 순서는 열별로 고정)", y=0.985, fontsize=14)
     return save(fig, f"fig25c_lineage_feature_dendrogram_{model}_panel{panel_size}.png")
 
 
