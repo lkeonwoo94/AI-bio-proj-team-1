@@ -1,7 +1,8 @@
 """Day 47 — CCA 시각화 (psh03 탐색 분석 adapt).
 
 Figure 24. canonical component 별 산점도(이진화 라벨) + 이진화 vs 연속값
-라벨 비교(component 1).
+라벨 비교(component 1) — 후자는 암종(lineage)별로 색칠해 공유 축이 암종
+차이를 반영하는 건 아닌지 확인한다.
 """
 
 from __future__ import annotations
@@ -14,11 +15,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from src.config import REPO_ROOT
 from src.viz.style import save, use_style
 
 TABLES = REPO_ROOT / "results" / "tables"
+TOP_N_LINEAGES = 12
+
+
+def lineage_palette(lineage: pd.Series) -> tuple[pd.Series, dict[str, str]]:
+    counts = lineage.value_counts()
+    shown = counts.head(TOP_N_LINEAGES).index
+    grouped = lineage.where(lineage.isin(shown), "Other lineage")
+    groups = list(shown) + ["Other lineage"]
+    palette = dict(zip(groups, sns.color_palette("tab20", len(shown)).as_hex() + ["#bdbdbd"]))
+    return grouped, palette
 
 
 def padded_limits(values: np.ndarray, fraction: float = 0.05) -> tuple[float, float]:
@@ -55,16 +67,24 @@ def main() -> int:
     fig.tight_layout()
     path1 = save(fig, "fig24_mutation_cca.png")
 
-    # Figure 24b. 이진화 vs 연속값 라벨 비교 (component 1)
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5.5))
-    axes[0].scatter(coords.U_bin_1, coords.V_bin_1, s=14, alpha=0.5, color="#4f81bd")
+    # Figure 24b. 이진화 vs 연속값 라벨 비교 (component 1) — 암종별 색칠
+    grouped, palette = lineage_palette(coords.lineage)
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5.5))
+    for group, color in palette.items():
+        idx = grouped.eq(group).to_numpy()
+        axes[0].scatter(coords.U_bin_1[idx], coords.V_bin_1[idx], s=14, alpha=0.6,
+                         color=color, label=f"{group} (n={idx.sum()})", linewidths=0)
+        axes[1].scatter(coords.U_cont_1[idx], coords.V_cont_1[idx], s=14, alpha=0.6,
+                         color=color, label=f"{group} (n={idx.sum()})", linewidths=0)
     axes[0].set_title(f"이진화 라벨 사용\nr = {cca.loc[0, 'correlation_binarized']:.3f}", fontsize=12)
-    axes[1].scatter(coords.U_cont_1, coords.V_cont_1, s=14, alpha=0.5, color="#c0504d")
     axes[1].set_title(f"연속값 라벨 사용\nr = {cca.loc[0, 'correlation_continuous_component1']:.3f}", fontsize=12)
     for ax in axes:
         ax.set_xlabel("mutation 패턴 점수 (canonical)")
         ax.set_ylabel("유전체 불안정성 점수 (canonical)")
-    fig.suptitle("Figure 24b. WGD·CIN·LOH 공유 축 검증 (이진화 vs 연속값 비교)", y=1.03, fontsize=13)
+    axes[1].legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=7.5,
+                   title=f"상위 {TOP_N_LINEAGES}개 암종", title_fontsize=8)
+    fig.suptitle("Figure 24b. WGD·CIN·LOH 공유 축 검증 (이진화 vs 연속값, 암종별 색칠)",
+                 y=1.03, fontsize=13)
     fig.tight_layout()
     path2 = save(fig, "fig24b_mutation_cca_comparison.png")
 

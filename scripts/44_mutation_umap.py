@@ -60,6 +60,7 @@ def main() -> int:
     out = pd.DataFrame({"UMAP1": coords[:, 0], "UMAP2": coords[:, 1]}, index=cohort.X.index)
     for target in TARGETS:
         out[target] = labels[target].values
+    out["lineage"] = cohort.groups.reindex(cohort.X.index).fillna("Unknown").values
     out.to_csv(TABLES / "day44_mutation_umap_coords.csv", index=True)
 
     print(f"UMAP feature: {X_umap.shape[1]}개 (prevalence >= {args.min_prevalence:.1%} 중 상위)")

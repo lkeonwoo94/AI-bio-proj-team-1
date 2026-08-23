@@ -72,6 +72,7 @@ def main() -> int:
         coords[f"V_bin_{i + 1}"] = V_bin[:, i]
     coords["U_cont_1"] = U_cont[:, 0]
     coords["V_cont_1"] = V_cont[:, 0]
+    coords["lineage"] = cohort.groups.reindex(cohort.X.index).fillna("Unknown").values
     coords.to_csv(TABLES / "day46_cca_coordinates.csv", index=True)
 
     print("CCA correlations (이진화):", ", ".join(f"{c:.3f}" for c in corr_bin))
