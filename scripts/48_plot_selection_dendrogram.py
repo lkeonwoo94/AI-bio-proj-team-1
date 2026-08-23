@@ -42,6 +42,9 @@ TARGETS = {"wgd": "WGD", "cin": "CIN", "loh": "LOH"}
 MODEL_LABEL = {"random_forest": "Random Forest", "elastic_net": "Elastic Net"}
 MIN_LINEAGE_N = 10
 TOP_N_LINEAGE_ROWS = 8
+COLOR_NOTE = ("* 가지 색은 scipy dendrogram() 기본 동작 — 자동 군집 임계값(기본: 최대 병합거리의 70%) "
+              "아래에서 갈라지는 서브클러스터를 구분하려고 순환 배정한 색일 뿐, 다른 값을 나타내지 않음. "
+              "임계값 위 가지는 전부 파란색.")
 
 
 def selection_matrix(model: str, target: str, panel_size: int) -> pd.DataFrame:
@@ -95,6 +98,7 @@ def plot_lineage_dendrogram(model: str, panel_size: int) -> Path:
     fig.suptitle(f"Figure 25b. 암종(lineage)별 패널 유전자 mutation 프로파일 군집 "
                  f"({MODEL_LABEL.get(model, model)}, {panel_size}-gene 패널, "
                  f"n≥{MIN_LINEAGE_N} 암종만)", y=1.0, fontsize=14)
+    fig.text(0.5, -0.02, COLOR_NOTE, ha="center", fontsize=8, color="#555")
     fig.tight_layout()
     return save(fig, f"fig25b_lineage_dendrogram_{model}_panel{panel_size}.png")
 
@@ -178,6 +182,9 @@ def plot_lineage_feature_dendrogram(model: str, panel_size: int, top_n: int = TO
     fig.suptitle(f"Figure 25c. 암종별 패널 유전자 co-mutation 패턴 (Figure 25와 같은 축, "
                  f"{MODEL_LABEL.get(model, model)}, {panel_size}-gene 패널, "
                  f"표본 수 상위 {top_n}개 암종, 유전자 순서는 열별로 고정)", y=0.985, fontsize=14)
+    fig.text(0.5, 0.005, "* 가지 색은 의미 없음 — 유전자 순서를 열별로 고정해서 직접 그린 트리라 "
+                          "서브클러스터 색 구분(Figure 25/25b 각주 참고) 없이 단색만 씀.",
+             ha="center", fontsize=9, color="#555")
     return save(fig, f"fig25c_lineage_feature_dendrogram_{model}_panel{panel_size}.png")
 
 
@@ -206,6 +213,7 @@ def main() -> int:
     fig.suptitle(f"Figure 25. Fold별 feature selection 안정성 "
                  f"({MODEL_LABEL.get(args.model, args.model)}, {args.panel_size}-gene 패널)",
                  y=1.0, fontsize=14)
+    fig.text(0.5, -0.02, COLOR_NOTE, ha="center", fontsize=8, color="#555")
     fig.tight_layout()
     path1 = save(fig, f"fig25_selection_dendrogram_{args.model}_panel{args.panel_size}.png")
 
