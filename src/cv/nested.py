@@ -16,7 +16,7 @@ outer test 데이터는 1~6 어디에도 관여하지 않는다.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import pandas as pd
@@ -31,10 +31,14 @@ from src.models.zoo import ModelSpec, extract_importance
 
 @dataclass
 class NestedResult:
-    """outer fold 별 성능과 feature 중요도."""
+    """outer fold 별 성능과 feature 중요도, 그리고 test fold 예측."""
 
     metrics: pd.DataFrame        # fold 당 한 행
     importances: pd.DataFrame    # fold × feature (필터 통과분만)
+    # outer test fold 예측을 전부 이어붙인 것 (fold, y_true, y_prob, y_pred, threshold).
+    # confusion matrix 처럼 fold 를 합쳐야 하는 그림을 위해 남긴다 — 이게 없으면
+    # 같은 nested CV 를 한 번 더 돌려야 한다.
+    predictions: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     @property
     def summary(self) -> pd.Series:
@@ -74,7 +78,7 @@ def run_nested_cv(
     # 학습에 쓰이는 label 은 각 fold 안에서 다시 만든다.
     y_strat = y_raw.astype(int) if pre_binarized else LabelBinarizer(target).fit_transform(y_raw)
 
-    metric_rows, importance_rows = [], []
+    metric_rows, importance_rows, prediction_rows = [], [], []
 
     for fold, (tr, te) in enumerate(
         outer_splits(y_strat.to_numpy(), groups, scheme=scheme, n_splits=outer_folds)
@@ -125,6 +129,10 @@ def run_nested_cv(
         if scheme == "lolo":
             row["held_out_lineage"] = groups.iloc[te].iloc[0]
         metric_rows.append(row)
+        prediction_rows.append(pd.DataFrame({
+            "fold": fold, "y_true": y_te, "y_prob": prob_te,
+            "y_pred": (prob_te >= threshold).astype(int), "threshold": threshold,
+        }))
 
         # --- 7. feature 중요도 (필터 통과 feature 에만 해당) ---
         imp = extract_importance(best, spec.importance)
@@ -144,4 +152,9 @@ def run_nested_cv(
         pd.concat(importance_rows, ignore_index=True)
         if importance_rows else pd.DataFrame(columns=["fold", "feature", "importance"])
     )
-    return NestedResult(metrics=metrics, importances=importances)
+    predictions = (
+        pd.concat(prediction_rows, ignore_index=True)
+        if prediction_rows
+        else pd.DataFrame(columns=["fold", "y_true", "y_prob", "y_pred", "threshold"])
+    )
+    return NestedResult(metrics=metrics, importances=importances, predictions=predictions)
