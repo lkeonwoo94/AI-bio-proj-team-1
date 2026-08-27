@@ -75,11 +75,17 @@ LOF_CLASSES = {
 | `TP53` | 57.8% | 12.4% |
 
 TP53 하나만 봐도 두 코호트 간 격차가 크다. 원인은 생물학이 아니라
-근사 방식의 한계다 — TCGA MC3 MAF 에서 TP53 은 missense 변이가
-2,927건으로 압도적인데, truncating-only 근사는 이를 전혀 잡지 못하고
-nonsense/frameshift/splice 계열 1,448건만 포착한다(TP53 은
-우성음성(dominant-negative) missense 가 주된 불활성화 경로인 대표
-유전자). 즉 TCGA 쪽 damaging 근사가 실제보다 낮게 잡혀 있다 — 이 격차가
+근사 방식의 한계다 — TCGA MC3 MAF 에서 TP53 은 missense 변이가 압도적인데,
+truncating-only 근사는 이를 전혀 잡지 못한다(TP53 은 우성음성
+(dominant-negative) missense 가 주된 불활성화 경로인 대표 유전자).
+
+| TP53 변이 건수 | Missense | truncating(근사에 잡히는 것) |
+| --- | ---: | ---: |
+| 검증 코호트(10,261명) 기준 | 2,786 | 1,375 |
+| MC3 MAF 전체 기준 | 2,927 | 1,449 |
+
+모델에 실제로 들어가는 것은 검증 코호트 기준 행이다. 즉 TCGA 쪽 damaging
+근사가 실제보다 낮게 잡혀 있다 — 이 격차가
 외부 검증 ROC-AUC 를 하한 쪽으로 끌어내리는 주 원인으로 추정된다.
 해석은 [additional_results.md §5](../research/2026-08-19/additional_results.md)
 참고.

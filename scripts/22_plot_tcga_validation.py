@@ -21,6 +21,40 @@ from src.viz.style import PHENOTYPE_COLORS, save, use_style
 TABLES = REPO_ROOT / "results" / "tables"
 
 
+def tp53_damaging_rates() -> list[float]:
+    """두 코호트의 TP53 damaging 보유 비율을 원본에서 직접 계산한다.
+
+    예전에는 [0.578, 0.124] 를 하드코딩해 뒀는데, 그 숫자가 어디서 나왔는지
+    그림만 봐서는 알 수 없었다(실제로 "TCGA 근사값을 어떻게 냈나" 라는 질문을
+    받았다). 데이터가 있으면 매번 다시 계산하고, 없을 때만 커밋된 값으로
+    돌아간다.
+
+    DepMap 은 VEP LofTool 기반 LikelyLoF 판정이고, TCGA 는 MC3 MAF 의 표준
+    truncating variant class(src/data/tcga.py 의 LOF_CLASSES)로 근사한 것이다 —
+    두 값은 정의가 완전히 같지 않다. 자세한 내용은
+    docs/gdc/tcga_data_summary.md §4 참고.
+    """
+    from src.data.merge import load_cohort
+
+    fallback = [0.578, 0.124]
+    try:
+        cohort = load_cohort()
+        col = next(c for c in cohort.X.columns if c.startswith("TP53 (7157)_damaging"))
+        depmap_rate = float(cohort.X[col].mean())
+    except Exception as exc:                     # 데이터 미보유 환경
+        print(f"  DepMap TP53 비율 계산 실패({exc.__class__.__name__}) — 커밋된 값 사용")
+        return fallback
+
+    tcga_path = REPO_ROOT / "data" / "gdc" / "tcga_damaging_matrix.parquet"
+    if not tcga_path.exists():
+        print("  tcga_damaging_matrix.parquet 없음 — TCGA 는 커밋된 값 사용")
+        return [depmap_rate, fallback[1]]
+
+    tcga_rate = float(pd.read_parquet(tcga_path, columns=["TP53"])["TP53"].mean())
+    print(f"  TP53 damaging 비율 — DepMap {depmap_rate:.4f} / TCGA {tcga_rate:.4f}")
+    return [depmap_rate, tcga_rate]
+
+
 def main() -> int:
     use_style()
     summary = pd.read_csv(TABLES / "day21_tcga_validation_summary.csv")
@@ -44,7 +78,7 @@ def main() -> int:
     ax = axes[1]
     tp53 = pd.DataFrame({
         "cohort": ["DepMap\n(세포주)", "TCGA\n(환자 종양)"],
-        "rate": [0.578, 0.124],
+        "rate": tp53_damaging_rates(),
     })
     ax.bar(tp53.cohort, tp53.rate, color=["#bfbfbf", PHENOTYPE_COLORS["wgd"]], width=0.55)
     for i, v in enumerate(tp53.rate):
@@ -56,7 +90,7 @@ def main() -> int:
     fig.suptitle(
         "Figure 11. TCGA 독립 코호트 검증 (WGD, damaging-only)\n"
         "(b)는 (a)의 하락폭 -0.168 을 '일반화 실패'로 단정하면 안 되는 이유:\n"
-        "TP53 missense 2,927건 중 대부분이 truncating-only 기준에서 누락됨",
+        "TP53 missense 2,786건(검증 코호트 10,261명)이 truncating-only 근사에서 전부 누락됨",
         y=1.12, fontsize=11,
     )
     fig.tight_layout()
