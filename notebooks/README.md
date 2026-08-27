@@ -3,14 +3,18 @@
 | 파일 | 내용 | Colab |
 | --- | --- | --- |
 | `01_full_pipeline.ipynb` | 데이터 로드부터 최종 biomarker panel·결론까지 전체 파이프라인 16개 절 | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lkeonwoo94/AI-bio-proj-team-1/blob/main/notebooks/01_full_pipeline.ipynb) |
-| `02_key_results.ipynb` | 핵심 결과만 간결하게 — 모델 비교, confusion matrix, feature importance, 최소 패널, 후속 실험 3종 요약, TCGA 검증, 탐색적 분석, 최종 패널 | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1tlgR9kLlaLHJsFy-m8J3G28alOIPs-0h?usp=sharing) |
+| `02_key_results.ipynb` | 핵심 결과만 간결하게 — 모델 비교, confusion matrix, feature importance, 최소 패널, 후속 실험 3종 요약, TCGA 검증, 탐색적 분석, 최종 패널 | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lkeonwoo94/AI-bio-proj-team-1/blob/main/notebooks/02_key_results.ipynb) |
 
 위 배지를 누르면 설치 없이 바로 실행할 수 있다. 첫 셀(§0)이 저장소를 클론하고
 데이터를 확보한 뒤, 필요한 패키지와 한글 폰트까지 깔아준다.
 
-> GitHub 에 있는 노트북은 주소 앞에
-> `https://colab.research.google.com/github/` 를 붙이면 어떤 것이든 Colab 에서
-> 열린다. 위 01 배지가 그 방식이고, 02 배지는 별도로 공유된 Colab 사본이다.
+> 두 배지 모두 주소 앞에 `https://colab.research.google.com/github/` 를 붙인
+> 형태다. 이러면 **항상 `main` 의 최신 노트북**을 불러온다. 반대로 Colab 에서
+> "드라이브에 사본 저장" 한 링크(`colab.research.google.com/drive/...`)는
+> 저장소와 끊긴 별개 사본이라, 이후 push 해도 갱신되지 않는다.
+>
+> 배지를 눌렀는데 옛 내용이 보이면 Colab 이 캐시한 것이다 — `Ctrl+Shift+R`
+> 로 새로고침하거나, 이미 열려 있던 탭을 닫고 새 탭에서 다시 연다.
 
 ## 데이터를 어떻게 찾는가 (§0 셀)
 
