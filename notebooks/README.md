@@ -67,28 +67,41 @@ lineage 검증(LOLO 24개 암종), 패널 크기 곡선, 회귀, pathway, signat
 
 ## 실행 시간 — 로컬 vs Colab
 
-같은 코드를 돌려도 Colab 무료 런타임은 **로컬보다 대략 10배 느리다**. 코어 수
-차이 때문이다(아래 로컬은 24스레드, Colab 무료는 vCPU 2개).
+**모델별 학습 시간(로컬, 표현형 1개당 outer 5 × inner 5)** — MLflow 가 기록한
+run duration 실측치다(`feature/mlflow-tracking-pilot` 브랜치, 유전자 표현 기준).
+
+| 모델 | WGD | CIN | LOH | 3표현형 합 |
+| --- | --- | --- | --- | --- |
+| CatBoost | 566초 | 430초 | 388초 | **23분** |
+| XGBoost | 244초 | 39초 | 31초 | 5.2분 |
+| Elastic Net | 67초 | 62초 | 62초 | 3.2분 |
+| Random Forest | 38초 | 38초 | 35초 | 1.9분 |
+| Logistic | 9초 | 9초 | 7초 | 0.4분 |
+
+**CatBoost 하나가 전체의 3분의 2를 쓴다.** 시간을 줄여야 하면 `RUN_MODELS`
+에서 CatBoost 부터 빼는 게 가장 효과가 크다. (표에는 모델 저장·등록 오버헤드가
+조금 섞여 있어 순수 nested CV 시간보다 약간 크다. Multi-task ANN 은 MLflow
+파일럿 대상이 아니라 빠져 있다.)
+
+**노트북 전체 실행 시간**
 
 | | 로컬 | Colab 무료 |
 | --- | --- | --- |
-| Random Forest / WGD (outer 5 × inner 5) | 35초 | 359초 |
-| Logistic / WGD | 8초 | 40초 |
-| `02_key_results.ipynb` 전체 (2개 모델 × 3표현형) | 2분 25초 | (추정) 20분 안팎 |
-| `01_full_pipeline.ipynb` 전체 (6개 모델 × 3표현형) | (추정) 11분 안팎 | (추정) **2시간 안팎** |
+| `02_key_results.ipynb` (Logistic + Random Forest) | 2분 40초 | (추정) 20분 안팎 |
+| `01_full_pipeline.ipynb` (6개 모델 전부) | 30분 초과 | (추정) 5시간 이상 |
 
-윗줄 네 개 중 "추정" 표시가 없는 값은 실제로 재서 나온 값이다. `01` 전체는
-아직 끝까지 돌려본 적이 없어, 모델별 개별 측정값(Logistic 8초 · XGBoost 25초 ·
-Random Forest 35초 · Elastic Net 50초 등, 표현형 1개 기준)을 합산한 추정이다.
+Colab 무료 런타임은 **로컬보다 대략 10배 느리다**(vCPU 2개 대 24스레드).
+같은 Random Forest / WGD 가 로컬 35초, Colab 359초였다.
 
 측정 환경(로컬): 13th Gen Intel Core i7-13700HX (12코어 24스레드), RAM 31GB,
 WSL2, Python 3.13.2 / scikit-learn 1.4.2 / numpy 1.26.4.
 Colab 은 무료 티어 CPU 런타임(vCPU 2개) 기준.
 
-`01` 을 Colab 에서 통째로 돌리는 것은 권하지 않는다 — 무료 티어에서 2시간
-연속 계산은 중간에 끊기기 쉽다. Colab 에서는 `RUN_MODELS` 를 줄여 일부 모델만
-학습하거나, 전체 재현이 필요하면 로컬에서 돌리는 편이 낫다. 무료 티어는 계정당
-동시 실행 세션 수도 제한되므로 두 노트북을 동시에 돌릴 수 없다.
+**`01` 을 Colab 에서 통째로 돌리지 않는 것을 권한다.** 로컬에서도 30분을
+넘기므로 Colab 에서는 몇 시간 단위가 되고, 무료 티어에서 그렇게 긴 연속 계산은
+중간에 끊긴다. Colab 에서 볼 거라면 `02` 를 쓰거나, `01` 의 `RUN_MODELS` 에서
+CatBoost·XGBoost 를 빼고 돌리면 된다. 무료 티어는 계정당 동시 실행 세션 수도
+제한되므로 두 노트북을 동시에 돌릴 수 없다.
 
 ## 로컬에서 실행하려면
 
